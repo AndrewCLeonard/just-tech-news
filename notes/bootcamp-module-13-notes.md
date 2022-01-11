@@ -7,6 +7,13 @@
 -   Create a user table using Sequelize models.
 -   Create all of the server endpoints using RESTful API standards to work with the User model’s data.
 
+| Lesson # | Task                                                                                               |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| 13.1     | Set up the application to use Sequelize to manage SQL data.                                        |
+| 13.2     | Use environment variables to protect sensitive data.                                               |
+| 13.3     | Create a user table using Sequelize models.                                                        |
+| 13.4     | Create all of the server endpoints using RESTful API standards to work with the User model’s data. |
+
 ### 13.1.2 Preview
 
 _Set up your application’s file structure before creating models and their associated routes. Application’s architecture will include a models folder._
@@ -913,9 +920,11 @@ const validPassword = dbUserData.checkPassword(req.body.password);
     -   response with data & message "you are now logged in" is sent.
 
 #### Quiz
+
 Bad idea to store plaintext passwords because Hackers will try to access users' other accounts by using these passwords
 
 ##### Question 2
+
 What is the name of the hook in Sequelize that allows logic to be executed in the model before a new instance object is updated?
 
 beforeCreate()
@@ -927,5 +936,47 @@ beforeChange()
 ##### Question 3
 
 cleartext = plaintext = unencrypted text
+
+### 13.2.7 Reflection
+
+learned how to:
+
+-   Incorporate a password hashing algorithm package to encode stored user passwords.
+-   Intervene during the create and update operations using hooks in the model.
+-   Use instance methods to compare user passwords in the login process.
+-   Create a login route for authentication.
+
+## 13.3 Create and Manipulate Posts
+
+### 13.3.1 Introduction
+
+_Create the `Post` model and routes enabling CRUD operations (e.g. creating a post_)
+
+-   create `Post` data model to enable users to create and manipulate posts or new articles
+-   create the RESTful Express APIs to allow CRUD operations to be performed on the MySQL database, which will be similar to how we created the `User` routes is 13.2.
+-   link a user to all their posts
+    -   create `post` table
+    -   learn how Sequelize defines the association between the `User` and `Post` models
+    -   how to request data from multiple tables
+
+Takeaways:
+
+-   Make associations to reflect relationships between models.
+-   Use include to JOIN associated table data in queries.
+-   Create API endpoints to execute CRUD on a Post.
+
+### 13.3.2 Preview
+
+_You’ll always need to define a model before you can create associations between that model and other models you’ve already created._
+
+| Step # | Task                                  | Description                                                                    |
+| ------ | ------------------------------------- | ------------------------------------------------------------------------------ |
+| 1      | Create a new feature branch.          | A new branch will isolate the development of the feature.                      |
+| 2      | Create the Post model.                | Define the Post data model to declare the columns, data types, and validation. |
+| 3      | Define model associations.            | Declare the model’s relationships and the foreign key references.              |
+| 4      | Create API routes for the Post model. | Use RESTful APIs to allow the resources for the database to be accessible.     |
+
+### 13.3.3 Create a New Feature Branch
+
 
 ## Save Point
