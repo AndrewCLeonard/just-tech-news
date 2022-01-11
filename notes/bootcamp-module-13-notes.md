@@ -245,6 +245,7 @@ Like SQL, js's constructors and classes should make application's dataflow consi
 -   create `User.js` in `models` dir.
 -   add code:
 
+```
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
 
@@ -274,6 +275,7 @@ User.init(
 );
 
 module.exports = User;
+```
 
 -   imported `Model` class and `DataTypes` object from Sequelize
     -   `Model` class used to create our own models using `extends` keyword
@@ -288,53 +290,55 @@ module.exports = User;
 Update `User` model to define these columns:
 
 ```
+
 User.init(
-  {
-    // define an id column
-    id: {
-      // use the special Sequelize DataTypes object provide what type of data it is
-      type: DataTypes.INTEGER,
-      // this is the equivalent of SQL's `NOT NULL` option
-      allowNull: false,
-      // instruct that this is the Primary Key
-      primaryKey: true,
-      // turn on auto increment
-      autoIncrement: true
-    },
-    // define a username column
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    // define an email column
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      // there cannot be any duplicate email values in this table
-      unique: true,
-      // if allowNull is set to false, we can run our data through validators before creating the table data
-      validate: {
-        isEmail: true
-      }
-    },
-    // define a password column
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        // this means the password must be at least four characters long
-        len: [4]
-      }
-    }
-  },
-  {
-    sequelize,
-    timestamps: false,
-    freezeTableName: true,
-    underscored: true,
-    modelName: 'user'
-  }
+{
+// define an id column
+id: {
+// use the special Sequelize DataTypes object provide what type of data it is
+type: DataTypes.INTEGER,
+// this is the equivalent of SQL's `NOT NULL` option
+allowNull: false,
+// instruct that this is the Primary Key
+primaryKey: true,
+// turn on auto increment
+autoIncrement: true
+},
+// define a username column
+username: {
+type: DataTypes.STRING,
+allowNull: false
+},
+// define an email column
+email: {
+type: DataTypes.STRING,
+allowNull: false,
+// there cannot be any duplicate email values in this table
+unique: true,
+// if allowNull is set to false, we can run our data through validators before creating the table data
+validate: {
+isEmail: true
+}
+},
+// define a password column
+password: {
+type: DataTypes.STRING,
+allowNull: false,
+validate: {
+// this means the password must be at least four characters long
+len: [4]
+}
+}
+},
+{
+sequelize,
+timestamps: false,
+freezeTableName: true,
+underscored: true,
+modelName: 'user'
+}
 );
+
 ```
 
 You can find all of the column settings in the [Sequelize model definition documents](https://sequelize.org/v5/manual/models-definition.html) (Links to an external site.) and all of the options for DataTypes in the [Sequelize DataTypes documents](https://sequelize.org/v5/manual/data-types.html) (Links to an external site.).
@@ -351,9 +355,11 @@ You can find all of the column settings in the [Sequelize model definition docum
 -   add code:
 
 ```
+
 const User = require('./User');
 
 module.exports = { User };
+
 ```
 
     -   imports `User` model and exports an object with it as a property
@@ -374,6 +380,7 @@ Why create that `User` model?
 Five routes that will work with `User` to perform CRUD operations in`user-routes.js`:
 
 ```
+
 const router = require('express').Router();
 const { User } = require('../../models');
 
@@ -393,6 +400,7 @@ router.put('/:id', (req, res) => {});
 router.delete('/:id', (req, res) => {});
 
 module.exports = router;
+
 ```
 
 | API Server Requirement | Endpoint Address |
@@ -416,16 +424,18 @@ in `user-routes.js`:
 ##### GET all users
 
 ```
+
 // GET /api/users
 router.get('/', (req, res) => {
-    // Access our User model and run .findAll() method
-    User.findAll()
-        .then(dbUserData => res.json(dbUserData))
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        });
+// Access our User model and run .findAll() method
+User.findAll()
+.then(dbUserData => res.json(dbUserData))
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
 });
+});
+
 ```
 
 -   API endpoint so when client makes GET request to `/api/users`, select all users from the user table in db and send it back as JSON.
@@ -436,25 +446,27 @@ router.get('/', (req, res) => {
 ###### GET One User based on its `req.params.id` value
 
 ```
+
 // GET /api/users/1
 router.get('/:id', (req, res) => {
-  User.findOne({
-    where: {
-      id: req.params.id
-    }
-  })
-    .then(dbUserData => {
-      if (!dbUserData) {
-        res.status(404).json({ message: 'No user found with this id' });
-        return;
-      }
-      res.json(dbUserData);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+User.findOne({
+where: {
+id: req.params.id
+}
+})
+.then(dbUserData => {
+if (!dbUserData) {
+res.status(404).json({ message: 'No user found with this id' });
+return;
+}
+res.json(dbUserData);
+})
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
 });
+});
+
 ```
 
 -   Sequelize allows you to
@@ -465,30 +477,34 @@ router.get('/:id', (req, res) => {
 ##### POST route to create a user
 
 ```
+
 // POST /api/users
 router.post('/', (req, res) => {
-  // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
-  User.create({
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  })
-    .then(dbUserData => res.json(dbUserData))
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
+User.create({
+username: req.body.username,
+email: req.body.email,
+password: req.body.password
+})
+.then(dbUserData => res.json(dbUserData))
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
 });
+});
+
 ```
 
 -   using Sequelize's `.create()` method to pass in key/value pairs which were defined in `User` model and the values we get from `req.body.`
 -   in SQL, it would be:
 
 ```
+
 INSERT INTO users
-  (username, email, password)
+(username, email, password)
 VALUES
-  ("Lernantino", "lernantino@gmail.com", "password1234");
+("Lernantino", "lernantino@gmail.com", "password1234");
+
 ```
 
 ##### PUT to Update Existing Data
@@ -496,28 +512,30 @@ VALUES
 -   use both `req.body` and `req.params`
 
 ```
+
 // PUT /api/users/1
 router.put('/:id', (req, res) => {
-  // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
+// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 
-  // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
-  User.update(req.body, {
-    where: {
-      id: req.params.id
-    }
-  })
-    .then(dbUserData => {
-      if (!dbUserData[0]) {
-        res.status(404).json({ message: 'No user found with this id' });
-        return;
-      }
-      res.json(dbUserData);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+// if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
+User.update(req.body, {
+where: {
+id: req.params.id
+}
+})
+.then(dbUserData => {
+if (!dbUserData[0]) {
+res.status(404).json({ message: 'No user found with this id' });
+return;
+}
+res.json(dbUserData);
+})
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
 });
+});
+
 ```
 
 -   `.update()` method combines parameters for creating data & looking up data.
@@ -526,33 +544,37 @@ router.put('/:id', (req, res) => {
 -   SQL would be:
 
 ```
+
 UPDATE users
 SET username = "Lernantino", email = "lernantino@gmail.com", password = "newPassword1234"
 WHERE id = 1;
+
 ```
 
 ##### DELETE method
 
 ```
+
 // DELETE /api/users/1
 router.delete('/:id', (req, res) => {
-  User.destroy({
-    where: {
-      id: req.params.id
-    }
-  })
-    .then(dbUserData => {
-      if (!dbUserData) {
-        res.status(404).json({ message: 'No user found with this id' });
-        return;
-      }
-      res.json(dbUserData);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+User.destroy({
+where: {
+id: req.params.id
+}
+})
+.then(dbUserData => {
+if (!dbUserData) {
+res.status(404).json({ message: 'No user found with this id' });
+return;
+}
+res.json(dbUserData);
+})
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
 });
+});
+
 ```
 
 -   `destroy()` method deletes data
@@ -562,6 +584,7 @@ router.delete('/:id', (req, res) => {
 -   create `routes/api/index.js` and add:
 
 ```
+
 const router = require('express').Router();
 
 const userRoutes = require('./user-routes.js');
@@ -569,6 +592,7 @@ const userRoutes = require('./user-routes.js');
 router.use('/users', userRoutes);
 
 module.exports = router;
+
 ```
 
 -   keeps API endpoints organized
@@ -578,6 +602,7 @@ module.exports = router;
 create `routes/idex.js` and add:
 
 ```
+
 const router = require('express').Router();
 
 const apiRoutes = require('./api');
@@ -585,10 +610,11 @@ const apiRoutes = require('./api');
 router.use('/api', apiRoutes);
 
 router.use((req, res) => {
-  res.status(404).end();
+res.status(404).end();
 });
 
 module.exports = router;
+
 ```
 
 -   like API folder's `index.js` for purpose of collecting endpoints and prefixing them, this one collects the packaged group of API endpoints and prefixes them with teh path `/api`.
@@ -599,6 +625,7 @@ When we import routes to `server.js`, they'll be packaged and ready to go with o
 `server.js` needs to be at root of entire project. Add code:
 
 ```
+
 const express = require('express');
 const routes = require('./routes');
 const sequelize = require('./config/connection');
@@ -614,8 +641,9 @@ app.use(routes);
 
 // turn on connection to db and server
 sequelize.sync({ force: false }).then(() => {
-  app.listen(PORT, () => console.log('Now listening'));
+app.listen(PORT, () => console.log('Now listening'));
 });
+
 ```
 
 -   because routes set up in organized way, don't need to import multiple files for different endpoints
@@ -639,14 +667,16 @@ sequelize.sync({ force: false }).then(() => {
 update `user-routes.js`:
 
 ```
+
 User.findAll({
-  attributes: { exclude: ['password'] }
+attributes: { exclude: ['password'] }
 })
-  .then(dbUserData => res.json(dbUserData))
-  .catch(err => {
-    console.log(err);
-    res.status(500).json(err);
-  });
+.then(dbUserData => res.json(dbUserData))
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
+});
+
 ```
 
 -   using array in case we add others later
@@ -654,23 +684,25 @@ User.findAll({
 update `User.findOne()`:
 
 ```
+
 User.findOne({
-  attributes: { exclude: ['password'] },
-  where: {
-    id: req.params.id
-  }
+attributes: { exclude: ['password'] },
+where: {
+id: req.params.id
+}
 })
-  .then(dbUserData => {
-    if (!dbUserData) {
-      res.status(404).json({ message: 'No user found with this id' });
-      return;
-    }
-    res.json(dbUserData);
-  })
-  .catch(err => {
-    console.log(err);
-    res.status(500).json(err);
-  });
+.then(dbUserData => {
+if (!dbUserData) {
+res.status(404).json({ message: 'No user found with this id' });
+return;
+}
+res.json(dbUserData);
+})
+.catch(err => {
+console.log(err);
+res.status(500).json(err);
+});
+
 ```
 
 ## 13.2
@@ -705,13 +737,17 @@ User.findOne({
 `bcrypt` Node package has good track record.
 
 ```
+
 npm install bcrypt
+
 ```
 
 Because `User.js` is in `models` folder and creates the `User` data, import `bcrypt` into `User.js`:
 
 ```
+
 const bcrypt = require('bcrypt);
+
 ```
 
 Use it async to save time
@@ -723,36 +759,37 @@ Use it async to save time
 -   nested level of `hooks` property needs to be aded to the second object in `User.init()`
 
 ```
+
 User.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        len: [4]
-      }
-    }
-  },
-  {
-    hooks: {
+{
+id: {
+type: DataTypes.INTEGER,
+allowNull: false,
+primaryKey: true,
+autoIncrement: true
+},
+username: {
+type: DataTypes.STRING,
+allowNull: false
+},
+email: {
+type: DataTypes.STRING,
+allowNull: false,
+unique: true,
+validate: {
+isEmail: true
+}
+},
+password: {
+type: DataTypes.STRING,
+allowNull: false,
+validate: {
+len: [4]
+}
+}
+},
+{
+hooks: {
 
     },
     sequelize,
@@ -760,21 +797,25 @@ User.init(
     freezeTableName: true,
     underscored: true,
     modelName: 'user'
-  }
+
+}
 );
+
 ```
 
 Then complete `hooks` property:
 
 ```
+
 hooks: {
-  // set up beforeCreate lifecycle "hook" functionality
-  beforeCreate(userData) {
-    return bcrypt.hash(userData.password, 10).then(newUserData => {
-      return newUserData
-    });
-  }
+// set up beforeCreate lifecycle "hook" functionality
+beforeCreate(userData) {
+return bcrypt.hash(userData.password, 10).then(newUserData => {
+return newUserData
+});
 }
+}
+
 ```
 
 -   `beforeCreate()` hook executes the `bcrypt` hash function on the plaintext password
@@ -790,13 +831,15 @@ hooks: {
 -   `await` can be used to prefix the `async` function
 
 ```
+
 hooks: {
-  // set up beforeCreate lifecycle "hook" functionality
-  async beforeCreate(newUserData) {
-    newUserData.password = await bcrypt.hash(newUserData.password, 10);
-    return newUserData;
-  },
+// set up beforeCreate lifecycle "hook" functionality
+async beforeCreate(newUserData) {
+newUserData.password = await bcrypt.hash(newUserData.password, 10);
+return newUserData;
+},
 }
+
 ```
 
 #### Hash the Password During the Update
@@ -813,11 +856,13 @@ _create login route that verifies users' identities_
 add code below other POST route:
 
 ```
+
 router.post('/login', (req, res) => {
 
-  // Query operation
+// Query operation
 
 })
+
 ```
 
 Why use a POST method and not a GET method?
@@ -828,24 +873,26 @@ Why use a POST method and not a GET method?
 -   if user's email is in the database, this instance of a user must be returned in a Promise so we can proceed with the password verification process
 
 ```
+
 router.post('/login', (req, res) => {
 // expects {email: 'lernantino@gmail.com', password: 'password1234'}
-  User.findOne({
-    where: {
-      email: req.body.email
-    }
-  }).then(dbUserData => {
-    if (!dbUserData) {
-      res.status(400).json({ message: 'No user with that email address!' });
-      return;
-    }
+User.findOne({
+where: {
+email: req.body.email
+}
+}).then(dbUserData => {
+if (!dbUserData) {
+res.status(400).json({ message: 'No user with that email address!' });
+return;
+}
 
     res.json({ user: dbUserData });
 
     // Verify user
 
-  });
 });
+});
+
 ```
 
 -   queries `User` table using `findOne()` method for the email entered by user
@@ -873,13 +920,15 @@ What needs to be done?
     -   uses `compareSync` function from `bcrypt`
 
 ```
+
 // create our User model
 class User extends Model {
-  // set up method to run on instance data (per user) to check password
-  checkPassword(loginPw) {
-    return bcrypt.compareSync(loginPw, this.password);
-  }
+// set up method to run on instance data (per user) to check password
+checkPassword(loginPw) {
+return bcrypt.compareSync(loginPw, this.password);
 }
+}
+
 ```
 
 ???
@@ -896,7 +945,9 @@ class User extends Model {
 add this code at `// Verify user`
 
 ```
+
 const validPassword = dbUserData.checkPassword(req.body.password);
+
 ```
 
 -   The instance method was called on the user retrieved from db `dbUserData`
@@ -978,5 +1029,116 @@ _You’ll always need to define a model before you can create associations betwe
 
 ### 13.3.3 Create a New Feature Branch
 
+1. checkout to `develop` branch
+2. `git pull origin develop` to make sure I'm up-to-date
+3. create `feature/post` branch
 
+### 13.3.4 Create the Post Model (Step 2)
+
+Benefits of ORMs
+
+-   reduce mistakes
+-   reduce amout of code
+-   protect db from vulnerabilities
+
+Sequelize gives constructor function to create instanced data with benefit of SQL persistence.
+
+Benefits of Models
+
+-   auto-building of tables
+-   data validation and restriction
+-   create relationships among data
+-   it's all written in js
+-   Many-to-many relationships
+-   Migrations
+-   Hooks
+-   Instance methods
+-   Static methods
+
+Examples:
+
+-   If you instruct sequelize column to be a string, it won't accept a boolean.
+-   By default, it creates columns `createdAt` and `updatedAt`
+
+#### Setting up Post Model
+
+-   create `model/Post.js`
+-   add code to `Post.js`
+
+    -   import modules:
+        -   connection to MySQL stored in `connection.js`
+        -   `Model` & `Datatypes` from `sequelize` package
+        ```
+        const = { Model, DataTypes } = require('sequelize');
+        const sequelize = require('../config/connection');
+        ```
+    -   define `Post` model
+        ```
+        // create our Post model
+        class Post extends Model {}
+        ```
+    -   define columns in the `Post`
+    -   configure naming conventions
+    -   pass current connection instance to initialize `Post` model
+
+        ```
+        // create fields/columns for Post model
+        Post.init(
+          {
+            id: {
+              type: DataTypes.INTEGER,
+              allowNull: false,
+              primaryKey: true,
+              autoIncrement: true
+            },
+            title: {
+              type: DataTypes.STRING,
+              allowNull: false
+            },
+            post_url: {
+              type: DataTypes.STRING,
+              allowNull: false,
+              validate: {
+                isURL: true
+              }
+            },
+            user_id: {
+              type: DataTypes.INTEGER,
+              references: {
+                model: 'user',
+                key: 'id'
+              }
+            }
+          },
+          {
+            sequelize,
+            freezeTableName: true,
+            underscored: true,
+            modelName: 'post'
+          }
+        );
+
+        module.exports = Post;
+        ```
+
+-   First parameter for `Post.init` defines `Post` schema.
+    -   `id` column as primary key & set to auto-increment
+    -   define `title` column as a String value.
+-   include `post_url` field
+    -   defined as a string
+    -   validate with `isURL` property = true
+-   `user_id` column so we know who posted the article
+    -   `references` property establishes relationship between this post and the user by creating reference to `User` model (`id` column defined by primary key in the `key` property. The `user_id` defined as the foregin key)
+-   second parameter of `init` method
+    -   configure metadata
+        -   naming conventions
+-   export expression to make `Post` model accessible to other parts of the app.
+
+require it in `models.index.js` and export it from there:
+```
+const User = require("./User");
+const Post = require("./Post");
+
+module.exports = { User, Post };
+```
 ## Save Point
