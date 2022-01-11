@@ -781,6 +781,7 @@ hooks: {
 
 -   `async` keyword used as a prefix to function that contains the asynchronous function
 -   `await` can be used to prefix the `async` function
+
 ```
 hooks: {
   // set up beforeCreate lifecycle "hook" functionality
@@ -792,7 +793,139 @@ hooks: {
 ```
 
 #### Hash the Password During the Update
+
 _need to hash passwords when users update them as well_
 
+### 13.2.6 Create the Login Route for Authentication
+
+_create login route that verifies users' identities_
+
+-   can't use GET route for single users because it's based on `req.params.id`, and the user id is unknown to users.
+-   need to verify user's identity using email & password. Could use username, but email will be unique
+
+add code below other POST route:
+
+```
+router.post('/login', (req, res) => {
+
+  // Query operation
+
+})
+```
+
+Why use a POST method and not a GET method?
+
+-   login route doesn't create or insert anything, true
+-   GET carries request parameter appended in the URL string
+-   POST method carries request parameter in `req.body` making it more secure to transfer data from client to server
+-   if user's email is in the database, this instance of a user must be returned in a Promise so we can proceed with the password verification process
+
+```
+router.post('/login', (req, res) => {
+// expects {email: 'lernantino@gmail.com', password: 'password1234'}
+  User.findOne({
+    where: {
+      email: req.body.email
+    }
+  }).then(dbUserData => {
+    if (!dbUserData) {
+      res.status(400).json({ message: 'No user with that email address!' });
+      return;
+    }
+
+    res.json({ user: dbUserData });
+
+    // Verify user
+
+  });
+});
+```
+
+-   queries `User` table using `findOne()` method for the email entered by user
+-   assigns it to `req.body.email`
+
+-   if user with that email _not_ found, msg sent back as res to client
+-   If email found, next step is to verify user's identity by matching the password from the user and the hashed password in the db.
+
+test it in Insomnia by POSTing to http://localhost:3001/api/users/login with the correct email and pw.
+
+#### Compare the Hashed Password
+
+For dev purposes, going to use the sync method to check passwords with bcrypt
+
+In Object Oriented Programming, an **instance method** returns or makes use of information (i.e. properties) specific to that particular object. Remember thath objects generated from classes are _instances_ of the class.
+
+We should create an instance method on the `User` model definition to access the password property of each user instance.
+
+##### Create Instance Method is `User.js`
+
+What needs to be done?
+
+-   modify `User` to include an instance method called `checkPassword`
+    -   takes plaintext password retrieved from the client request at `req.body.email` & compares that with the hashed password.
+    -   uses `compareSync` function from `bcrypt`
+
+```
+// create our User model
+class User extends Model {
+  // set up method to run on instance data (per user) to check password
+  checkPassword(loginPw) {
+    return bcrypt.compareSync(loginPw, this.password);
+  }
+}
+```
+
+???
+
+-   `this` keyword allows access to user's properties
+-   The `.findOne()` Sequelize method looks for a user with the specified email.
+-   The result of the query is passed as `dbUserData` to the `.then()` part of the `.findOne()` method.
+-   If the query result is successful (i.e., not empty), we can call `.checkPassword()`, which will be on the `dbUserData` object.
+-   We'll need to pass the plaintext password, which is stored in `req.body.password`, into `.checkPassword()` as the argument.
+
+-   The `.compareSync()` method, which is inside the `.checkPassword()` method, can then confirm or deny that the supplied password matches the hashed password stored on the object.
+-   `.checkPassword()` will then return `true` on success or `false` on failure. We'll store that boolean value to the variable `validPassword`.
+
+add this code at `// Verify user`
+
+```
+const validPassword = dbUserData.checkPassword(req.body.password);
+```
+
+-   The instance method was called on the user retrieved from db `dbUserData`
+
+    -   Because instance method returns a Boolean, can be used in conditional statement to verify if user has been verified or not
+
+        ```
+        if (!validPassword) {
+        res.status(400).json({ message: 'Incorrect password!' });
+        return;
+        }
+
+        res.json({ user: dbUserData, message: 'You are now logged in!' });
+        ```
+
+-   if match returns `false`,
+    -   error message sent back to client,
+        return statement exits out of function.
+-   if there is a match,
+    -   conditional statement block is ignored
+    -   response with data & message "you are now logged in" is sent.
+
+#### Quiz
+Bad idea to store plaintext passwords because Hackers will try to access users' other accounts by using these passwords
+
+##### Question 2
+What is the name of the hook in Sequelize that allows logic to be executed in the model before a new instance object is updated?
+
+beforeCreate()
+_No, this is the hook to execute logic before the create operation, not the update._
+beforeUpdate()
+beforeBuild()
+beforeChange()
+
+##### Question 3
+
+cleartext = plaintext = unencrypted text
 
 ## Save Point
