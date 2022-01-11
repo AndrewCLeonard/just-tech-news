@@ -666,4 +666,133 @@ User.findOne({
   });
 ```
 
+## 13.2
+
+### 13.2.1 Introduction
+
+-   \_Sequelize with third-party node packages to encrypt user passwords so they're not stored as plaintext in the database.
+-   _Create a login route to verify user identity._
+
+-   Secure user passwords stored in a database with hashing.
+-   Add Sequelize hooks (lifecycle events) at key junctures in the application workflow to process important tasks
+-   Use async and await keywords to handle asynchronous functionality to increase legibility.
+-   Create user authentication that enables identity verification with a hashed password.
+
+### 13.2.2 Preview
+
+| Step # | Task                                     | Description                                                                                  |
+| ------ | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 1      | Create a new feature branch.             | Isolate the development code for a new feature.                                              |
+| 2      | Introduce bcrypt.                        | Bcrypt is used to hash a password and verify matches.                                        |
+| 3      | Use hooks to hash the password.          | Intervene at key moments using Sequelize’s OOP properties in the model to hash the password. |
+| 4      | Create the login route for verification. | A separate route will be used to log in and check the user’s credentials.                    |
+
+### 13.2.3 Create a New Feature Branch
+
+`feture/password`
+
+### 13.2.4 Introducing bcrypt
+
+**Hashing** = one-way transformation on a password, turning the pw into another string.
+
+`bcrypt` Node package has good track record.
+
+```
+npm install bcrypt
+```
+
+Because `User.js` is in `models` folder and creates the `User` data, import `bcrypt` into `User.js`:
+
+```
+const bcrypt = require('bcrypt);
+```
+
+Use it async to save time
+
+### 13.2.5 Use Hooks to Hash the Password
+
+-   **hooks** or **lifecycle events** are functions called before or after calls in Sequelize. This is how we inject this logic to occur just before a user account is created.
+-   Modify the models in `models/Users.js`. Adding hooks
+-   nested level of `hooks` property needs to be aded to the second object in `User.init()`
+
+```
+User.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true
+      }
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: [4]
+      }
+    }
+  },
+  {
+    hooks: {
+
+    },
+    sequelize,
+    timestamps: false,
+    freezeTableName: true,
+    underscored: true,
+    modelName: 'user'
+  }
+);
+```
+
+Then complete `hooks` property:
+
+```
+hooks: {
+  // set up beforeCreate lifecycle "hook" functionality
+  beforeCreate(userData) {
+    return bcrypt.hash(userData.password, 10).then(newUserData => {
+      return newUserData
+    });
+  }
+}
+```
+
+-   `beforeCreate()` hook executes the `bcrypt` hash function on the plaintext password
+-   in `bcrypt` hash function, pass in `userData` object that contains plaintext password in `password` property.
+-   `saltRound` value of 10
+
+-   resulting hashed password passed to the Promise object as a `newUserData` object with a hashed `password` property.
+-   `return` statement exits out
+
+##### Simplifying with `async/await`
+
+-   `async` keyword used as a prefix to function that contains the asynchronous function
+-   `await` can be used to prefix the `async` function
+```
+hooks: {
+  // set up beforeCreate lifecycle "hook" functionality
+  async beforeCreate(newUserData) {
+    newUserData.password = await bcrypt.hash(newUserData.password, 10);
+    return newUserData;
+  },
+}
+```
+
+#### Hash the Password During the Update
+_need to hash passwords when users update them as well_
+
+
 ## Save Point
