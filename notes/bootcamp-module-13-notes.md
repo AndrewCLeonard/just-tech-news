@@ -1177,6 +1177,471 @@ Post.belongsTo(User, {
 
 ### 13.3.6 Create API routes for the Post Model
 
+Some developers would argue it would be better to build each section of the app at a time. E.g., create all models at once, routes at once, etc.
+
 #### Get All the Posts
+
+-   create `api/routes/post-routes.js`
+-   add code:
+    ```
+    const router = requrie('express').Router();
+    const { Post, User } = require('../../models');
+    ```
+    -   including `User` here for the `JOIN` that's needed to match the posts to users.
+
+##### Create the Query
+
+```
+// get all users
+router.get("/", (req, res) => {
+    console.log("================");
+    Post.findAll({
+        // Query configuration
+    });
+});
+```
+
+Which columns will be needed?
+
+-   `id`
+-   `post_url`
+-   `title`
+-   `create_at`
+
+```
+Post.findAll({
+  attributes: ['id', 'post_url', 'title', 'created_at'],
+})
+```
+
+-   we set `underscored: true,` in `Post` model. By default it would be camelcase.
+
+-   `include` the `JOIN` to the `User` table:
+
+    ```
+    	include: [
+    	{
+    		model: User,
+    		attributes: ["username"],
+    	},
+    ];
+    ```
+
+    -   `include` is an array of objects, refrencing the `model`'s `attributes`
+
+-   create a Promise that captures the response from the database call
+
+    ```
+    // get all users
+    router.get("/", (req, res) => {
+        console.log("================");
+        Post.findAll({
+            // Query configuration
+            attributes: ["id", "post_url", "title", "created_at"],
+            include: [
+                {
+                    model: User,
+                    attributes: ["username"],
+                },
+            ]
+        });
+        .then(dbPostData => res.json(dbPostData))
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+    });
+    ```
+
+-   add code `module.exports = router;`
+    -   in order to test this route, expose changes to router with Express.js
+    -   needs to be at bottom so that `router` assigned once Express API endpoints have been defined
+
+Routes in `post-routes.js` must be exposed properly with correct URL path. --> assign `postRoutes` to the Express.js router
+
+-   add code to `routes/api/index.js`
+
+        ```
+        // packaged group of API endpoints and prefixing them
+        const router = require("express").Router();
+
+        const userRoutes = require("./user-routes.js");
+        const postRoutes = require("./post-routes.js");
+
+        //
+        router.use("/users", userRoutes);
+        router.use("/posts", postRoutes);
+
+        module.exports = router;
+        ```
+
+    After saving, restarting the server, and running query in Insomnia, the JSON object is empty because there are no posts in the database.
+    ![empty response](./images/300-post-empty.jpg)
+
+##### Seed the `post` table with data using mysql CLI
+
+-   `mysql -u root -p` and enter password
+-   `use just_tech_news_db;` and message should be `Database changed`
+-   insert entry into the `post` table
+    ```
+    INSERT INTO post (title, post_url, user_id, created_at, updated_at)
+    VALUES ("Taskmaster goes public!", "https://taskmaster/press", 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    ```
+
+#### GET a Single Post
+
+```
+// GET a single post
+router.get("/:id", (req, res) => {
+	Post.findOne({
+		where: {
+			id: req.params.id,
+		},
+		attributes: ["id", "post_url", "title", "created_at"],
+		include: [
+			{
+				model: User,
+				attributes: ["Username"],
+			},
+		],
+	}).then((dbPostData) => {
+		if (!dbPostData) {
+			res.status(404).json({ message: "No post found with this id" });
+			return;
+		}
+        res.json(dbPostData);
+	})
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
+});
+```
+
+-   `req.pamas.id` to retrieve property from route
+-   `where` property to set vaule of `id` using `req.params.id`
+-   requesting same attributes as "get all posts," which requires a reference to the `User` model using `include` property.
+-   `404` status code ids user error and will need a different request for a successful response
+
+#### Create a Post
+
+```
+// POST a new user: /
+router.post("/", (req, res) => {
+	// expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com', user_id: 1}
+	Post.create({
+		title: req.body.title,
+		post_url: req.body.post_url,
+		user_id: req.body.user_id,
+	})
+		.then((dbPostData) => res.json(dbPostData))
+		.catch((err) => {
+			console.log(err);
+			res.status(500).json(err);
+		});
+});
+```
+
+-   As we did in `user-routes.js`, `req.body` populates the columns in the `post` table
+
+-   add a post in insomnia:
+    ```
+    {
+    "title": "Runbuddy reaches 1 million subscribers",
+    "post_url": "https://runbuddy.com/press",
+    "user_id": 1
+    }
+    ```
+    -   don't need to assign `created_at` or `updated_at` fields in `req.body` with Sequelize because they're created automatically. SQL does _not_ do this, so they need to be included on CLI.
+
+#### Update a Post's Title
+
+-   is `module.exports` expression still at bottom of file?
+-   This route needs to be below the last `POST` route
+    -   we're updating an existing entry, so
+        -   retrieve the post instance by `id'
+        -   alter the value of the `title` on this instance of a post.
+    -   use request parameter to find the post
+    -   `req.body.title` replaces the title of the post
+    -   response sends back data that has been modified and stored in the db
+
+```
+// PUT update a post's title
+router.put("/:id", (req, res) => {
+	// expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com', user_id: 1}
+
+	Post.update(
+		{
+			title: req.body.title,
+		},
+		{
+			where: {
+				id: req.params.id,
+			},
+		}
+	)
+		.then((dbPostData) => {
+			if (!dbPostData) {
+				res.status(404).json({ message: "No post found with this id" });
+				return;
+			}
+			res.json(dbPostData);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.status(500).json(err);
+		});
+});
+```
+
+-   save and restart server
+-   send `PUT` request with corresponding `req.params.id` and `req.body.title` in the Insomnia request
+    ```
+    {
+        "title": "Runbuddy reaches 2 million subscribers"
+    }
+    ```
+    -   the return will just be a 1. This is SQL's way to verify the number of rows changed in the last query.
+-   retrieve all posts to ensure the change was made
+
+#### Delete a Post
+
+use...
+
+-   Sequelize's `destroy` method
+-   unique id in the query parameter
+
+...to find and delete this instance of a post
+
+```
+router.delete('/:id', (req, res) => {
+  Post.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+    .then(dbPostData => {
+      if (!dbPostData) {
+        res.status(404).json({ message: 'No post found with this id' });
+        return;
+      }
+      res.json(dbPostData);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+});
+```
+
+-   test in Insomnia
+-   add back in using `POST` route
+
+-   new post created at `id = 3` to avoid any possible references to other tables
+
+##### put newest posts on the top
+
+```
+Post.findAll({
+  attributes: ['id', 'post_url', 'title', 'created_at'],
+  order: [['created_at', 'DESC']],
+  include: [
+    {
+      model: User,
+      attributes: ['username']
+    }
+  ]
+})
+```
+
+-   bug in sequelize that requires double brackets
+    -   `order` property assigned a nested array that orders by `created_at` column in descending order
+
+##### Quiz
+
+What is an advantage of creating the data models on the application layer in Sequelize vs. on the database layer?
+
+We can make changes to the data model by simply restarting the application.
+Data models are easier to write when represented as an object.
+Allows for business logic to easily occur during data processing with hooks and instance methods.
+**All of these reasons. - correct**
+
+We need to drop the tables if we introduce changes to the model associations in Sequelize.
+
+What type of method do we use to perform the password check on the user's password during the login verification process?
+correct answer: An instance method.
+
+A static method - no response given
+
+A static method _No, a static method is a class method that is not accessible by an instance of User._
+A dynamic method _No such thing_
+An instance method - correct
+A class method _No, a class method in JavaScript is known as a static method and is called on the object constructor and not on the instance of the object._
+
+## 13.4
+
+### 13.4.1 Introduciton
+
+so far, covered "one-to-many" data relationships.
+
+In this lesson, create "many-to-many" relationship where
+
+-   many users can vote on many posts.
+-   use a new table to make this connection between users and posts
+
+The lesson objectives include the following:
+
+-   Create a new Vote model to store data about who is voting on which posts.
+-   Implement a many-to-many model association using Sequelize.
+-   Create a route allowing a user to vote on a post.
+-   Update existing routes to query for related data to see who has voted on what post.
+-   Clean up some of the code with a custom static Sequelize model method.
+
+### 13.4.2 Preview
+
+_implement a `Vote` model to serve as a connecting table to track the posts users are voting on._
+
+_Before we can create or update any routes to include vote data, we need to_
+
+1. create the Vote model to hold data connecting the User and Post models. Once we’ve created this model, we should...
+2. Create a route to update a post by adding a vote to it.
+3. Then we can update the GET routes to return the vote data.
+4. Finally, we’ll use a Sequelize feature to clean up the code.
+
+| Step # | Task                                   | Description                                                                                                                   |
+| ------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1      | Create the Vote model.                 | We’ll create the Vote model that will hold data connecting the User and Post models and create the relationship between them. |
+| 2      | Create PUT route for voting on a post. | We’ll create a route that updates a post by adding a vote to it.                                                              |
+| 3      | Update GET routes to include votes.    | We’ll edit some of the queries to include data for related votes.                                                             |
+| 4      | Refactor messy code.                   | Some of the routes may look a little busy after adding this new code, so let’s use a Sequelize feature to clean it up.        |
+
+### 13.4.3 Create the Vote Model
+
+_We’ll create the Vote model that will hold data connecting the User and Post models and create the relationship between them._
+
+In one-to-many relationships, the owned data entity holds a reference to its owner. The owner holds no reference to the data it owns to prevent unnecessary duplication
+
+In many-to-many relationships, each side must hold a reference to its counterpart. A third table known as a **through table** will connect the data between the two other tables with their primary keys.
+
+create `models/Vote.js` and add:
+
+```
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/connection");
+
+class Vote extends Model {}
+
+Vote.init(
+	{
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
+		// What needs to go here?
+	},
+	{
+		sequelize,
+		timestamps: false,
+		freezeTableName: true,
+		underscored: true,
+		modelName: vote,
+	}
+);
+
+model.exports = Vote;
+```
+
+Need to have rows to list primary key of the user and the primary key of the post they voted on:
+
+```
+Vote.init(
+	{
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
+        // inclued user_id and post_id to track ownership of posts
+		user_id: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			references: {
+				model: "user",
+				key: "id",
+			},
+		},
+		post_id: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			references: {
+				model: "post",
+				key: "id",
+			},
+		},
+	},
+	{
+		sequelize,
+		timestamps: false,
+		freezeTableName: true,
+		underscored: true,
+		modelName: vote,
+	}
+);
+```
+
+Need to instruct the `User` and `Post` models how they can query on one another through this `Vote` model
+
+#### Create a Many-to-Many Association
+
+add to `models/index.js`: `const Vote = require('./Vote');`
+
+associate `User` and `Post` to one another so when we
+
+-   query `Post`, we can see a total of how many votes a user creates
+-   query a `User`, we can see all the posts they've voted on.
+-   use `belongsToMany()`, _not_ `.hasMany()`
+    -   using two `belongsToMany()` allows both `User` and `Post` to query each other's info in the context of a vote.
+        -   see which users voted on a single post
+        -   see which posts a single user voted on
+-   `Vote` table needs a **foreign key constraint**: a row of data to be a unique pairing.
+-   Many-to-Many relationships power most data. E.g., A necklace that belongs to "Necklaces" _and_ "silver" _and_ etc.
+
+add to `models/index.js`
+
+```
+User.belongsToMany(Post, {
+	through: Vote,
+	as: "voted_posts",
+	foreignKey: "user_id",
+});
+
+Post.belongsToMany(User, {
+	through: Vote,
+	as: "voted_posts",
+	foreignKey: "post_id",
+});
+```
+
+##### Connect `User` and `Vote` Directly
+_creating one-to-many associations directly between these models allows aggregated SQL functions between models_
+
+```
+Vote.belongsTo(User, {
+	foreignKey: "user_id",
+});
+
+Vote.belongsTo(Post, {
+	foreignKey: "post_id",
+});
+
+User.hasMany(Vote, {
+	foreignKey: "user_id",
+});
+
+Post.hasMany(Vote, {
+	foreignKey: "post_id",
+});
+```
+
 ## Save Point
-https://courses.bootcampspot.com/courses/951/pages/13-dot-3-6-create-api-routes-for-the-post-model?module_item_id=333775
