@@ -1135,10 +1135,48 @@ Examples:
 -   export expression to make `Post` model accessible to other parts of the app.
 
 require it in `models.index.js` and export it from there:
+
 ```
 const User = require("./User");
 const Post = require("./Post");
 
 module.exports = { User, Post };
 ```
+
+### 13.3.5 Define Model Associations
+
+How will relationship between tables work?
+
+-   A `User` can make many `Post`s.
+-   A `Post` will only belong to one `User`.
+
+```
+User.hasMany(Post, {
+	foreinKey: "user_id",
+});
+
+Post.belongsTo(User, {
+	foreignKey: "user_id",
+});
+```
+
+-   defines the relationship of the `Post` model to the `User.`
+-   the foreign key is designated at `user_id` in the `Post` model
+
+-   When creating associations between models on the db layer in the schema using SQL, you have to drop the table and recreate it again to implement associations.
+-   We need to do the same thing with Sequelize by using `server.js` by changing `({ force: false })` to `true. This forces the tables to re-create if there are any association changes.
+
+    ```
+    // turn on connection to d and server
+    sequelize.sync({ force: false }).then(() => {
+        app.listen(PORT, () => console.log(`Now listening on ${PORT}`));
+    });
+    ```
+
+-   after refresh, change it back
+
+### 13.3.6 Create API routes for the Post Model
+
+#### Get All the Posts
 ## Save Point
+https://courses.bootcampspot.com/courses/951/pages/13-dot-3-6-create-api-routes-for-the-post-model?module_item_id=333775
