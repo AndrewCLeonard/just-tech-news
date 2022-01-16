@@ -2303,9 +2303,16 @@ User Stories:
 
 ### Create the Homepage File
 
+-   starting from `develop` branch, create branch `feature/homepage-view`.
+
 ### Add a Style Sheet
 
--   starting from `develop` branch, create branch `feature/homepage-view`.
+-   add stylesheet to `/public/stylesheets/style.css`
+-   in `server.js`, add
+    -   `const path = require('path');` to make it available to the client
+    -   near other `app.use()` statements, add `app.use(express.static(path.join(__dirname, 'public')));`
+
+    
 
 ### 14.1.4: Set Up the Template Engine
 
