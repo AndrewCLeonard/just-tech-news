@@ -1874,7 +1874,6 @@ class Post extends Model {
 
 #### modify `post-routes.js`'s PUT route for `/api/posts/upvote` to use this method
 
-<<<<<<< HEAD:notes/bootcamp-module-13-notes.md
 ```
 router.put('/upvote', (req, res) => {
   // custom static method created in models/Post.js
@@ -1940,7 +1939,7 @@ _create a new `Comment` model tha will store who made the comment and on which p
 | 2      | Create comment API routes.             | We’ll need to create routes for creating and deleting a comment.                                                                 |
 | 3      | Update GET routes to include comments. | We’ll update some queries to include associated comment data.                                                                    |
 | 4      | Deploy to Heroku.                      | We’ll use Heroku to deploy the API.                                                                                              |
-=======
+
 ### 13.5.3 Create the Comment Model
 
 -   create branch `feature/comments`
@@ -2049,8 +2048,53 @@ add `Comment` to the destructured objects in the `require` statement at top of `
 `const { Post, User, Vote, Comment } = require("../../models");`
 
 ### 13.5.6 Deploy to Heroku
-`
->>>>>>> feature/comments:zz_notes/bootcamp-module-13-notes.md
+
+-   make sure
+    -   Heroku
+        -   Heroku account active
+        -   Heroku CLI installed
+    -   repo changes pushed
+        -   `push` `feature/comments` branch
+        -   `merge` it into `develop` and then `main`
+
+#### Heroku Setup
+
+```
+heroku create
+git push heroku main
+```
+
+##### Routing for Heroku
+
+-   `server.js` already set up to use Heroku's `process.env.PORT` value when deployed OR `3001` when run locally
+-   `config/connection.js` needs fixing:
+
+    ```
+    const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PW, {
+      host: 'localhost',
+      dialect: 'mysql',
+      port: 3306
+    });
+    ```
+
+    -   this will only work with local database
+        -   ports on my computer need to be made public (very bad idea) and
+        -   always leave computer on
+    -   make a new remote db on Heroku to use when deployed, use local db when run locally
+
+    ```
+    let sequelize;
+
+    if (process.env.JAWSDB_URL) {
+      sequelize = new Sequelize(process.env.JAWSDB_URL);
+    } else {
+      sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PW, {
+        host: 'localhost',
+        dialect: 'mysql',
+        port: 3306
+      });
+    }
+    ```
 
 ## Save Point
 
