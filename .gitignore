@@ -1,5 +1,7 @@
 # Manually Added
-DS_Store
+.DS_Store
+notes/examples/
+post-routes-example.js
 
 # Logs
 logs

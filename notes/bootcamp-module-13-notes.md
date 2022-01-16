@@ -1624,6 +1624,7 @@ Post.belongsToMany(User, {
 ```
 
 ##### Connect `User` and `Vote` Directly
+
 _creating one-to-many associations directly between these models allows aggregated SQL functions between models_
 
 ```
@@ -1643,5 +1644,234 @@ Post.hasMany(Vote, {
 	foreignKey: "post_id",
 });
 ```
+
+-   export modules: `module.exports = { User, Post, Vote };`
+
+### 13.4.4 Create PUT route for voting on a post
+
+-   _voting belongs to a post = create new endpoint at `/api/post` and_ not _a new endpoint `/api/vote`_
+-   Voting is technically updating a post's data = create PUT route for updating a post.
+
+add to `post-routes.js`
+
+-   below `router.post()` endpoint:
+-   above `/:id` PUT route so that Express.js doesn't think the word "upvote" is a valid parameter for `/:id`.
+
+```
+// PUT /api/posts/upvote
+router.put("/upvote", (req, res) => {
+
+});
+```
+
+Upvote involves two queries:
+
+1. `Vote` model to create a vote
+2. query the post to get an updated vote count
+
+Make sure `Vote` model imported into the file at top
+
+update PUT endpoint:
+
+```
+// PUT /api/posts/upvote (needs to be above `/:id` route)
+router.put("/upvote", (req, res) => {
+	Vote.create({
+		user_id: req.body.user_id,
+		post_id: req.body.post_id
+	})
+	.then(dbPostData => res.json(dbPostData))
+	.catch(err => res.json(err));
+});
+```
+
+-   because relationship between tables updated, need to use `sequelize.sync({ force: true })` in `server.js` to drop and recreate tables.
+-   turn `force` back to `false` after updating
+
+##### Test if a vote works
+
+1. create a new user ('/api/users')
+2. create a new post ('/api/posts')
+3. create a new vote ('/api/posts/upvote')
+
+```
+{
+  "user_id": 1,
+  "post_id": 1
+}
+```
+
+##### Update route to return info
+
+1. so when you vote, you receive updated post information
+2. include total vote count for post
+
+```
+// PUT upvotes: /api/posts/upvote (needs to be above `/:id` route)
+router.put("/upvote", (req, res) => {
+	// create the vote
+	Vote.create({
+		user_id: req.body.user_id,
+		post_id: req.body.post_id,
+	})
+		.then(() => {
+			// then find the post we just voted on
+			return Post.findOne({
+				where: {
+					id: req.body.post_id,
+				},
+				attributes: [
+					"id",
+					"post_url",
+					"title",
+					"created_at",
+					// use raw MySQL aggregate function query to get a count of how many votes the post has and return it under the name `vote_count`
+					[sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id"), "vote_count"],
+				],
+			});
+		})
+		.then((dbPostData) => res.json(dbPostData))
+		.catch((err) =>
+		console.log(err);
+		res.status(400).json(err);
+});
+```
+
+-   route now updated to query on the post we voted on after the vote was created.
+    -   tally up the total number of votes that post has
+    -   Sequelize's `.findAndCountAll()` built-in method can do the addition, but won't work here because we're counting an associated table's data and _not_ the post itself.
+    -   `.literal()` method allows us to run regular SQL queries from within Sequelize method-based queries
+
+### 13.4.5 Update GET Routes to Include Votes
+
+1. update two GET routes for posts in `post-routes.js`
+2. update `user-routes.js` so we can see which posts a user has voted on
+
+#### Get route for `/api/posts`
+
+add `[sequelize.literal]`:
+
+```
+// update the `.findAll()` method's attributes to look like this
+attributes: [
+  'id',
+  'post_url',
+  'title',
+  'created_at',
+  [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+],
+```
+
+#### Get route for `/api/posts/:id`
+
+add `[sequelize.literal]`:
+
+```
+router.get('/:id', (req, res) => {
+  Post.findOne({
+    where: {
+      id: req.params.id
+    },
+    attributes: [
+      'id',
+      'post_url',
+      'title',
+      'created_at',
+      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+    ],
+    include: [
+      {
+        model: User,
+        attributes: ['username']
+      }
+    ]
+  })
+    .then(dbPostData => {
+      if (!dbPostData) {
+        res.status(404).json({ message: 'No post found with this id' });
+        return;
+      }
+      res.json(dbPostData);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+});
+```
+
+#### Update User Routes to Include Vote Data
+
+-   use `include` to create a table association to retrieve data regarding users
+    -   list of posts that a user has created
+    -   list of posts a user has voted on
+    ```
+    // replace the existing `include` with this
+    include: [
+    {
+        model: Post,
+        attributes: ['id', 'title', 'post_url', 'created_at']
+    },
+    {
+        model: Post,
+        attributes: ['title'],
+        through: Vote,
+        as: 'voted_posts'
+    }
+    ]
+    ```
+-   when querying a single user, we'll get title information for every post they've ever voted on
+    -   had to include `Post` model, contextualizing it by going through the `Vote` table
+
+update imported models in `user-routes.js` require statement: `const { User, Post, Vote } = require("../../models");`
+
+### 13.4.6 Refactor Messy Code
+
+**instance methods**
+
+-   allow you to package up returned data queried from Sequelize with custom methods.
+-   e.g. check if password is correct for a login system
+
+**model methods**
+
+-   take a complicated Sequelize query which combines Sequelize methods and give that complex functionality its own name
+
+#### Create Sequelize model method
+
+update `models/Post.js`:
+
+-   js's built-in `static` keyword indicates the `upvote` method is based on the `Post` model and not an instance method as used earlier with `User` model.
+-   we can now execute `Post.upvote()` as if it were one of Sequelize's other built-in methods
+-   pass in value of `req.body` as `body` and an object of the models (as `models`) as parameters.
+-   this will handle the complicated voting query in the `/api/posts/upvote` route, so implement it there in `models/Post.js`
+
+```
+class Post extends Model {
+	static upvote(body, models) {
+        return models.Vote.create({
+            user_id: body.user_id,
+            post_id: doby.post_id
+        }).then(() = {
+            return Post.findOne({
+                where: {
+                    id: body.post_id
+                },
+                attributes: [
+                    'id',
+                    'post_url',
+                    'title',
+                    'created_at',
+                    [
+                        sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'),
+                        'vote_count'
+                    ]
+                ]
+            });
+        });
+	}
+}
+```
+
+#### modify `post-routes.js`'s PUT route for `/api/posts/upvote` to use this method
 
 ## Save Point

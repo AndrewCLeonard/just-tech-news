@@ -10,7 +10,7 @@ Vote.init(
 			primaryKey: true,
 			autoIncrement: true,
 		},
-        // inclued user_id and post_id to track ownership of posts
+		// inclued user_id and post_id to track ownership of posts
 		user_id: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
@@ -33,8 +33,8 @@ Vote.init(
 		timestamps: false,
 		freezeTableName: true,
 		underscored: true,
-		modelName: vote,
+		modelName: "Vote",
 	}
 );
 
-model.exports = Vote;
+module.exports = Vote;
