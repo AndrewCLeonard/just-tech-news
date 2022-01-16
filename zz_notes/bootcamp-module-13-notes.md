@@ -2096,6 +2096,305 @@ git push heroku main
     }
     ```
 
-## Save Point
+#### Quiz
 
-https://courses.bootcampspot.com/courses/951/pages/13-dot-5-3-create-the-comment-model?module_item_id=333871
+The fs.writeFile() method will **NOT** create a directory to place the file in if it doesn't already exist.
+_When using fs.writeFile(), we need to make sure the directory we're writing a file to already exists. This can be done manually or by using the fs.existsSync() method._
+
+Which CSS property allows the parent element to display its CSS properties by stretching its dimensions to physically contain its child elements?
+
+text-align: center;
+**overflow: auto;: CORRECT**
+_Correct! Setting the overflow property to auto allows the parent element to become aware of its child elements and stretch its dimensions to contain them._
+margin: auto;
+_No, setting the margin of an element to auto only specifies that the browser should calculate the margin for each side of an element._
+display: inline-block;
+_No, setting the display of an element to inline-block gives the element the properties of an inline element, but it also allows you to specify some of the properties of block elements, such as the width and height of the element and the top and bottom margin and padding._
+
+# Module 14: Model-View-Controller (MVC)
+
+## Table of Contents
+
+1. Lesson 1: Create the Homepage View
+    1. 14.1.2: Preview
+    1. 14.1.3: Set Up the Project
+    1. 14.1.4: Set Up the Template Engine
+    1. 14.1.5: Create the Homepage Template
+    1. 14.1.6: Populate the Template with Sequelize Data
+    1. 14.1.7: Reflection
+1. Lesson 2: Create the User Login
+    1. 14.2.1: Introduction
+    1. 14.2.2: Preview
+    1. 14.2.3: Create a Login Page
+    1. 14.2.4: Add Front-End Logic to Forms
+    1. 14.2.5: Create a Session on the Back End
+    1. 14.2.6: Add Logic to Destroy the Session
+    1. 14.2.7: Reflection
+1. Lesson 3: Create the Single-Post View
+    1. 14.3.1: Introduction
+    1. 14.3.2: Preview
+    1. 14.3.3: Create a Single-Post Template
+    1. 14.3.4: Add Upvote Functionality
+    1. 14.3.5: Add Comment Functionality
+    1. 14.3.6: Conditionally Render the Form Elements
+    1. 14.3.7: Conditionally Render the Login Links
+    1. 14.3.8: Reflection
+1. Lesson 4: Partials and Helpers
+    1. 14.4.1: Introduction
+    1. 14.4.2: Preview
+    1. 14.4.3: Create a Partial for Post Information
+    1. 14.4.4: Create a Partial for Comments
+    1. 14.4.5: Write and Fulfill Test for Date Formats
+    1. 14.4.6: Write and Fulfill Test for Plural Words
+    1. 14.4.7: Write and Fulfill Test for URL Formats
+    1. 14.4.8: Add Helper Functions to Handlebars.js
+    1. 14.4.9: Reflection
+1. Lesson 5: Create the Dashboard View
+    1. 14.5.1: Introduction
+    1. 14.5.2: Preview
+    1. 14.5.3: Create the Dashboard Template
+    1. 14.5.4: Add Data and Logic to the Dashboard
+    1. 14.5.5: Protect Routes with Middleware
+    1. 14.5.6: Create an Edit Post Page
+    1. 14.5.7: Reflection
+1. Module 14 Weekly Challenge
+    1. Model-View-Controller (MVC) Challenge: Tech Blog
+    1. Module 14 Think Like a Developer
+    1. Module 14 Reflection and Retrieval
+    1. Module 14 Career Connection
+    1. Module 14 Career Connection
+    1. Module 14 Dessert Menu
+
+## 14.0
+
+### 14.0.1 Into to Module 14
+
+[to do] MVC intro video
+**MVC** architectural pattern that structures a codebase as three distinct sections according to software design philosophy known as **separation of concerns**
+
+| Task       | Description                                                                                                                                                       | What's Next?                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Model      | data                                                                                                                                                              | dynamically generate HTML using Handlebars.js to form View layer |
+| View       | display (HTML)                                                                                                                                                    |                                                                  |
+| Controller | Intermediary layer that connects the View and the Model: e.g. handles input from user, interacts with Model to CRUD, returns query results to user via view layer | Create Controller with Express.js                                |
+
+Additional Tasks:
+
+-   authenticate users by verifying their credentials
+-   deploy full-stack app to Heroku
+
+### 14.0.2 Roadmap
+
+#### Skills Applied
+
+-   Structure your application following the Model-View-Controller (MVC) paradigm.
+-   Modularize your code into separate folders for your Models, View, and Controllers to enforce - separation of concerns.
+-   Render dynamic HTML for your views using the Handlebars.js template engine.
+-   Implement user authentication.
+-   Configure Heroku so that you can deploy your application using a MySQL database.
+
+#### What You Will Learn
+
+-   Render dynamic HTML using the Handlebars.js template engine.
+-   Explain and implement MVC modularization in a full-stack web application.
+-   Configure Heroku for deployment of an application using MySQL.
+-   Explain the interaction between the Model, View, and Controller.
+-   Explain separation of concerns and its benefits.
+-   Implement user authentication.
+
+### 14.0.3 Getting Ready for Class
+
+[to do] Prettier video
+
+### 14.0.4 Up and Running
+
+finish the full-stack app
+
+-   front end using templating engine Handlebars.js
+-   structure the MVC pardigm
+-   allow logged-in users to update and delete their posts through a dashboard interface
+    [to do] build this week video
+
+#### Tools Used
+
+Handlebars.js
+
+-   logicless templating language
+-   keeps View and code separte
+-   compiles templates into js functions
+-   extension of Mustache templating language
+-   There's a Handlebars npm package, but I'll use Express Handlebars package as View engine
+
+express-session package
+
+-   Express.js middleware that uses sessions. Sessions = mechanism to help apps determine whether multiple requests came from the same client.
+    -   Devs may assign every user a unique session so their app can store the user state and authenticate users
+
+connect-session-sequelize package
+
+-   provides apps with a scalable store for sessions
+-   express-session package's default server-side session storage = `MemoryStore`
+    -   purposely not designed for production environment
+    -   leaks memory under most conditions
+    -   doesn't scale past a single process
+    -   only meant for debugging and developing
+-   The connect-session-sequelize package resolves these issues and is compatible with Sequelize ORM.
+
+## 14.1 Lesson 1: Create the Homepage View
+
+### 14.1.1: Introduction
+
+-   set up the homepage in this lesson.
+    -   Use proper code organization paradigms in a full-stack app.
+    -   Use a template engine to deliver front-end files.
+
+### 14.1.2: Preview
+
+| Step | Task                                       | Description                                                                                      |
+| ---- | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| 1    | Set up the project.                        | You’ll build off of the previous project by creating new GitHub issues and adding a style sheet. |
+| 2    | Set up the template engine.                | You’ll install Handlebars and configure Express to use it as its template engine.                |
+| 3    | Create the homepage template.              | You’ll create a Handlebars template for the homepage, populated with dummy data.                 |
+| 4    | Populate the template with Sequelize data. | You’ll use a previously defined Sequelize query to populate the homepage with real data.         |
+
+### 14.1.3: Set Up the Project
+
+### Create GitHub Issues
+
+Title: Create a homepage
+
+User Stories:
+
+-   As a user, I can view all news articles in a list.
+
+-   As a user, I can see how many upvotes and comments each article has.
+
+-   As a user, I can click on the comment count to route to a different page.
+
+Title: Create a login and signup page
+
+User Stories:
+
+-   As a user, I can visit a login page to create a new account or log into an existing account.
+
+-   As a user, I want to stay logged in even if I refresh the page or close the browser tab.
+
+-   As a user, I can click a "logout" button for the app to forget me.
+
+Title: Create a single post page
+
+User Stories:
+
+-   As a user, I can view an article's details on a separate page.
+
+-   As a logged-in user, I can add a comment to an article.
+
+-   As a logged-in user, I can upvote an article.
+
+Title: Create a dashboard for logged-in users
+
+User Stories:
+
+-   As a logged-in user, I can view all of my posted articles on a separate dashboard page.
+
+-   As a logged-in user, I can create new article posts via the dashboard.
+
+-   As a logged-in user, I can edit or delete my existing articles via the dashboard.
+
+### Create the Homepage File
+
+### Add a Style Sheet
+
+-   starting from `develop` branch, create branch `feature/homepage-view`.
+
+### 14.1.4: Set Up the Template Engine
+
+### 14.1.5: Create the Homepage Template
+
+### 14.1.6: Populate the Template with Sequelize Data
+
+### 14.1.7: Reflection
+
+### 14.2.1: Introduction
+
+### 14.2.2: Preview
+
+### 14.2.3: Create a Login Page
+
+### 14.2.4: Add Front-End Logic to Forms
+
+### 14.2.5: Create a Session on the Back End
+
+### 14.2.6: Add Logic to Destroy the Session
+
+### 14.2.7: Reflection
+
+## Lesson 3: Create the Single-Post View
+
+### 14.3.1: Introduction
+
+### 14.3.2: Preview
+
+### 14.3.3: Create a Single-Post Template
+
+### 14.3.4: Add Upvote Functionality
+
+### 14.3.5: Add Comment Functionality
+
+### 14.3.6: Conditionally Render the Form Elements
+
+### 14.3.7: Conditionally Render the Login Links
+
+### 14.3.8: Reflection
+
+## Lesson 4: Partials and Helpers
+
+### 14.4.1: Introduction
+
+### 14.4.2: Preview
+
+### 14.4.3: Create a Partial for Post Information
+
+### 14.4.4: Create a Partial for Comments
+
+### 14.4.5: Write and Fulfill Test for Date Formats
+
+### 14.4.6: Write and Fulfill Test for Plural Words
+
+### 14.4.7: Write and Fulfill Test for URL Formats
+
+### 14.4.8: Add Helper Functions to Handlebars.js
+
+### 14.4.9: Reflection
+
+## Lesson 5: Create the Dashboard View
+
+### 14.5.1: Introduction
+
+### 14.5.2: Preview
+
+### 14.5.3: Create the Dashboard Template
+
+### 14.5.4: Add Data and Logic to the Dashboard
+
+### 14.5.5: Protect Routes with Middleware
+
+### 14.5.6: Create an Edit Post Page
+
+### 14.5.7: Reflection
+
+## Module 14 Weekly Challenge
+
+### Model-View-Controller (MVC) Challenge: Tech Blog
+
+### Module 14 Think Like a Developer
+
+### Module 14 Reflection and Retrieval
+
+### Module 14 Career Connection
+
+### Module 14 Career Connection
+
+### Module 14 Dessert Menu
+
+## Save Point
