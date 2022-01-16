@@ -1184,7 +1184,7 @@ Some developers would argue it would be better to build each section of the app 
 -   create `api/routes/post-routes.js`
 -   add code:
     ```
-    const router = requrie('express').Router();
+    const router = require('express').Router();
     const { Post, User } = require('../../models');
     ```
     -   including `User` here for the `JOIN` that's needed to match the posts to users.
@@ -1874,4 +1874,72 @@ class Post extends Model {
 
 #### modify `post-routes.js`'s PUT route for `/api/posts/upvote` to use this method
 
+```
+router.put('/upvote', (req, res) => {
+  // custom static method created in models/Post.js
+  Post.upvote(req.body, { Vote })
+    .then(updatedPostData => res.json(updatedPostData))
+    .catch(err => {
+      console.log(err);
+      res.status(400).json(err);
+    });
+});
+```
+
+#### quiz
+
+Question 1
+
+When setting up a many-to-many association between Sequelize models, what association method do we use with both models?
+incorrect answer: .hasMany(). selected
+
+.belongsToMany() - CORRECT
+_Yes, when setting up a many-to-many relationship, we indicate that both models belong to one another but through a third-party model._
+.hasMany() - incorrect
+_No, even though this sounds like it would make sense, neither model necessarily owns the data of another model. Both models' data technically belong to one another through the third-party model on which we join them._
+
+What was the Sequelize method we used to execute a custom SQL query from within our JavaScript code?
+
+sequelize.query()
+sequelize.literal() - correct
+
+Yes, this method allows us to execute subqueries and aggregate functions from within an existing Sequelize method execution.
+Question 3
+
+When querying data using a through table, can we pick and choose which attributes return from the joined data?
+correct answer: Yes. selected
+
+No
+Yes - correct
+
+Correct, we have complete control of what data is returned from a joined table using the attributes property within the include option.
+
+## 13.5 Create and Manipulate Comments on Post Data
+
+### 13.5.1
+
+-   Create a new Comment model to store data about who is commenting on which post.
+-   Implement a double belongsTo/hasMany association using Sequelize.
+-   Create routes that allow users to add new and delete old comments.
+-   Update existing routes to include comment data.
+-   Deploy the full suite of APIs to Heroku with their free SQL add-on.
+
+### 13.5.2 Preview
+
+_create a new `Comment` model tha will store who made the comment and on which post_
+
+#### Order
+
+-   _We need to create the Comment model before we can create any API routes to use its data or update existing routes to include that data._
+-   _We’ll also need to create an API route for creating and deleting comments before we can include this data in the existing GET routes._
+
+| Step # | Task                                   | Description                                                                                                                      |
+| ------ | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | Create the Comment model.              | We’ll create the Comment model that will hold data connecting the User and Post models and create the relationship between them. |
+| 2      | Create comment API routes.             | We’ll need to create routes for creating and deleting a comment.                                                                 |
+| 3      | Update GET routes to include comments. | We’ll update some queries to include associated comment data.                                                                    |
+| 4      | Deploy to Heroku.                      | We’ll use Heroku to deploy the API.                                                                                              |
+
 ## Save Point
+
+https://courses.bootcampspot.com/courses/951/pages/13-dot-5-3-create-the-comment-model?module_item_id=333871
