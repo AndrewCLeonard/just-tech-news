@@ -1874,6 +1874,7 @@ class Post extends Model {
 
 #### modify `post-routes.js`'s PUT route for `/api/posts/upvote` to use this method
 
+<<<<<<< HEAD:notes/bootcamp-module-13-notes.md
 ```
 router.put('/upvote', (req, res) => {
   // custom static method created in models/Post.js
@@ -1939,6 +1940,117 @@ _create a new `Comment` model tha will store who made the comment and on which p
 | 2      | Create comment API routes.             | We’ll need to create routes for creating and deleting a comment.                                                                 |
 | 3      | Update GET routes to include comments. | We’ll update some queries to include associated comment data.                                                                    |
 | 4      | Deploy to Heroku.                      | We’ll use Heroku to deploy the API.                                                                                              |
+=======
+### 13.5.3 Create the Comment Model
+
+-   create branch `feature/comments`
+-   create `model/Comment.js`
+
+-   comment table will hold text of:
+
+    -   comment
+    -   id of user
+    -   id of the post it belongs to
+
+### 13.5.4
+
+`routes/api/comment-routes.js`
+
+```
+const router = require('express').Router();
+const { Comment } = require('../../models');
+
+router.get('/', (req, res) => {
+
+});
+
+router.post('/', (req, res) => {
+
+});
+
+router.delete('/:id', (req, res) => {
+
+});
+
+module.exports = router;
+```
+
+add to `api/index.js` to:
+
+-   import the `comment-routes.js` module
+-   instruct the `router` instance to use it
+-   all routes defined in `comment-routes.js` will have the `/comments` prefix
+
+```
+const commentRoutes = require('./comment-routes');
+router.use('/comments', commentRoutes);
+```
+
+add POST route to `comment-routes.js`:
+
+```
+Comment.create({
+  comment_text: req.body.comment_text,
+  user_id: req.body.user_id,
+  post_id: req.body.post_id
+})
+  .then(dbCommentData => res.json(dbCommentData))
+  .catch(err => {
+    console.log(err);
+    res.status(400).json(err);
+  });
+```
+
+Reminders:
+
+-   change db connection in `server.js` to `{force : true }` to recreate tables, then turn it back to `false`.
+-   when testing, `user_id` and `post_id` need to exist. Need to recreate afterwards.
+
+### 13.5.5 Update the Routes to Include Comments
+
+Just Tech News front end:
+
+-   make request for all posts to display on homepage
+-   request for single post to display on a separate page
+-   comment data will need to be with post data
+-   `Comment` model also includes `User` model to attach username to the comment
+
+update `post-routes.js` `Post.findAll()` query to include comment model:
+
+```
+Post.findAll({
+ order: [['created_at', 'DESC']],
+ attributes: [
+   'id',
+   'post_url',
+   'title',
+   'created_at',
+   [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+ ],
+ include: [
+   // include the Comment model here:
+   {
+     model: Comment,
+     attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+     include: {
+       model: User,
+       attributes: ['username']
+     }
+   },
+   {
+     model: User,
+     attributes: ['username']
+   }
+ ]
+})
+```
+
+add `Comment` to the destructured objects in the `require` statement at top of `post-routes.js`:
+`const { Post, User, Vote, Comment } = require("../../models");`
+
+### 13.5.6 Deploy to Heroku
+`
+>>>>>>> feature/comments:zz_notes/bootcamp-module-13-notes.md
 
 ## Save Point
 
