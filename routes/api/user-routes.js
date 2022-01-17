@@ -1,5 +1,7 @@
+// MY FILE
 const router = require("express").Router();
-const { User, Post, Vote } = require("../../models");
+// ERROR: FORGOT `Comment` HERE
+const { User, Post, Comment, Vote } = require("../../models");
 
 // GET /api/users
 router.get("/", (req, res) => {
@@ -17,21 +19,33 @@ router.get("/", (req, res) => {
 // GET individual users: /api/users/:id
 router.get("/:id", (req, res) => {
 	User.findOne({
+		// ERROR: FORGOT TO EXCLUDE PASSWORD
+		attributes: { exclude: ["password"] },
 		where: {
 			id: req.params.id,
 		},
 		include: [
 			{
 				model: Post,
-				attributes: ['id', 'title', 'post_url', 'created_at']
+				attributes: ["id", "title", "post_url", "created_at"],
 			},
 			{
+				// ERROR: FORGOT THIS SECTION START
+				model: Comment,
+				attributes: ["id", "comment_text", "created_at"],
+				include: {
+					model: Post,
+					attributes: ["title"],
+				},
+			},
+			// FORGOT SECTION END
+			{
 				model: Post,
-				attributes: ['title'],
+				attributes: ["title"],
 				through: Vote,
-				as: 'voted_posts'
-			}
-		]
+				as: "voted_posts",
+			},
+		],
 	})
 		.then((dbUserData) => {
 			if (!dbUserData) {
