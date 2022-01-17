@@ -9,21 +9,21 @@ Comment.init(
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			primaryKey: true,
-			references: {
-				model: "vote",
-				key: "id",
-			},
+			// references: {  BROKE IT????
+			// 	model: "vote",
+			// 	key: "id",
+			// },
 		},
 		comment_text: {
 			type: DataTypes.STRING,
 			allowNull: false,
 			validate: {
-				len: [4],
+				len: [1],
 			},
 		},
 		user_id: {
 			type: DataTypes.INTEGER,
-			allowNull: false,
+			// allowNull: false,
 			references: {
 				model: "user",
 				key: "id",
@@ -31,7 +31,7 @@ Comment.init(
 		},
 		post_id: {
 			type: DataTypes.INTEGER,
-			allowNull: false,
+			// allowNull: false,
 			references: {
 				model: "post",
 				key: "id",
@@ -42,7 +42,7 @@ Comment.init(
 		sequelize,
 		freezeTableName: true,
 		underscored: true,
-		modelName: "comments",
+		modelName: "comment", // HAD AS "comments", SHOULDN'T HAVE AN "S"
 	}
 );
 
