@@ -2331,6 +2331,14 @@ User Stories:
 ### 14.2.4: Add Front-End Logic to Forms
 
 ### 14.2.5: Create a Session on the Back End
+**Sessions** allow Express.js serever to keep track of which user is making a request and store useful data about them in memory. 
+**Cookies** store info about the session on the user's client
+- we'll store the user's cookies in the database so we can easily re-create the user's session
+
+```npm i express-session connect-session-sequelize```
+- `express-session` library allows us to connect ot the back end
+- `connect-session-sequelize` library automatically stores the sessions created by `express-session` into our database
+[] watch video
 
 ### 14.2.6: Add Logic to Destroy the Session
 
