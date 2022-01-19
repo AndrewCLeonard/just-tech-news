@@ -2311,24 +2311,548 @@ User Stories:
 -   in `server.js`, add
     -   `const path = require('path');` to make it available to the client
     -   near other `app.use()` statements, add `app.use(express.static(path.join(__dirname, 'public')));`
+        -   The express.static() method is a built-in Express.js middleware function that can take all of the contents of a folder and serve them as static assets. This is useful for front-end specific files like images, style sheets, and JavaScript files.
 
-    
+`npm start` and check `http://localhost:3001/stylesheets/style.css` to see if stylesheet shows up.
 
 ### 14.1.4: Set Up the Template Engine
 
+-   Up to now, app served static HTML and js files
+    -   js code on front end makes follow-up request to api endpoints using Fetch API
+    -   brief second where user sees nothing
+    -   extra network requests can be burden on server.
+    -   app won't perform as well on search engines because data and index not always available on initial request.
+
+send data as string literal inside request? Silliness!
+
+Enter template engines!
+
+#### Set Up the Handlebars Template Engine
+
+`npm install express-handlebars`
+
+`server.js` add code to set up Handlebars.js as app's template engine:
+
+```
+const exphbs = require('express-handlebars');
+const hbs = exphbs.create({});
+
+app.engine('handlebars', hbs.engine);
+app.set('view engine', 'handlebars');
+```
+
+##### set up where template files live
+
+create `views/layouts/main.handlebars` and add:
+
+-   placeholder `{{{ body }}} = Handlebars.js syntax for data to be plugged in later
+
+```
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Just Tech News</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+  <div class="wrapper">
+    <header>
+      <h1>
+        <a href="/">Just Tech News</a>
+      </h1>
+    </header>
+    <main>
+      {{{ body }}}
+    </main>
+    <footer>
+      Thanks for visiting!
+    </footer>
+  </div>
+
+</body>
+
+</html>
+```
+
+create `views/homepage.handlebars` and add `<div>You are on the homepage</div>`
+
+file/folder structure MUST be set up this way for Handlebars.js.
+
+-   main layout `views/layouts/main.handlebars`
+-   other files will go directly in `views` folder
+
+#### Introducing the Model-View-Controller Paradigm
+
+`view` folder required because of MVC paradigm
+
+-   Models: the core data of your app
+-   Views: the UI components, such as your HTML layouts
+-   Controllers: the link between your models and views
+
+#### Set Up MVC
+
+-   rename `/routes` -> `/controllers`
+-   update references in `server.js`
+-   create `/controllers/home-routes.js` and add:
+
+    ```
+    const homeRoutes = require('./home-routes.js');
+
+    router.use('/', homeRoutes);
+    ```
+
+    -   In past, used `res.send()` or `resSendFile()` for responses
+    -   With template engine, use `res.render()` and specify which template to use (here it's `homepage.handlebars`)
+
+    -   set up main homepage route:
+
+        ```
+        const router = require('express').Router();
+
+        router.get('/', (req, res) => {
+          res.render('homepage');
+        });
+
+        module.exports = router;
+        ```
+
+#### View the Homepage
+
+visit http://localhost:3001/
+
 ### 14.1.5: Create the Homepage Template
 
+#### Templating Engine Video
+
+-   js templating engines separate HTML structure and code from content we're generating
+-   typically use `{{}}`
+
+In past used js to generate HTML to put on page, such as `.createElement()` or `.appendChild`
+
+templating engines reverse that by adding javascript into HTML code
+
+1. template engine uses static files written using HTML
+1. at runtime, t.e. replaces variables within template with actual values
+1. sent back to client so user sees interface with appropriate data
+
+`res.render()` can accept object as second argument to include data you want to pass to your template.
+
+update `home-routes.js`:
+
+-   take a single "post" object and pass it to `homepage.handlebars` template.
+-   each property of the object (2nd argument) becomes available in the template using Handlebars.js `{{}}` syntax.
+
+```
+router.get('/', (req, res) => {
+  res.render('homepage', {
+    id: 1,
+    post_url: 'https://handlebarsjs.com/guide/',
+    title: 'Handlebars Docs',
+    created_at: new Date(),
+    vote_count: 10,
+    comments: [{}, {}],
+    user: {
+      username: 'test_user'
+    }
+  });
+});
+```
+
+update `homepage.handlebars.js`:
+
+```
+<ol class="post-list">
+  <li>
+    <article class="post">
+      <div class="title">
+        <a href="{{post_url}}" target="_blank">{{title}}</a>
+        <span>({{post_url}})</span>
+      </div>
+      <div class="meta">
+        {{vote_count}} point(s) by {{user.username}} on
+        {{created_at}}
+        |
+        <a href="/post/{{id}}">{{comments.length}} comment(s)</a>
+      </div>
+    </article>
+  </li>
+</ol>
+```
+
 ### 14.1.6: Populate the Template with Sequelize Data
+
+Use `Post.findAll()` in `api/post-routes.js` to populate homepage template
+
+import modules and models into `home-routes.js`:
+
+```
+const sequelize = require('../config/connection');
+const { Post, User, Comment } = require('../models');
+```
+
+update `home-routes.js` homepage route:
+
+-   for now passing 1st post (`dbPostData[0]`) to test it works.
+-   results in incomplete homepage
+
+```
+router.get('/', (req, res) => {
+  Post.findAll({
+    attributes: [
+      'id',
+      'post_url',
+      'title',
+      'created_at',
+      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+    ],
+    include: [
+      {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
+      {
+        model: User,
+        attributes: ['username']
+      }
+    ]
+  })
+    .then(dbPostData => {
+      // pass a single post object into the homepage template
+      res.render('homepage', dbPostData[0]);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+```
+
+add before `render()` method to verify that's true. It returns a Sequelize object with lots of info
+
+```
+console.log(dbPostData[0]);
+res.render('homepage', dbPostData[0]);
+```
+
+serialize object down to necessary properties:
+
+```
+res.render('homepage', dbPostData[0].get({ plain: true }));
+```
+
+Didn't need to serialize data building API routes because the `res.json()` method automatically does that
+
+add code before `render()`:
+
+-   loop over and map each Sequelize object into a serialized version of itself
+-   saves results in new `posts` array, which can be used in a template
+
+```
+const posts = dbPostData.map(post => post.get({ plain: true }));
+```
+
+-   `render()` can accept an array instead of an object. But, that would prevent addition of other properties to the template later on.
+    ->
+    add the array to an object
+
+```
+res.render('homepage', { posts });
+```
+
+Template set up to receive an object with an `id`, `title`, and other properties. Now it only can access `posts` array.
+->
+Handlebars.js has built-in **helpers** that allow minimal logic like looping over an array:
+
+-   `{{#each}}` defines beginning of loop
+-   `{{/each}}` defines the end
+
+```
+<ol class="post-list">
+  {{#each posts}}
+  <li>
+    <article class="post">
+      <div class="title">
+        <a href="{{post_url}}" target="_blank">{{title}}</a>
+        <span>({{post_url}})</span>
+      </div>
+      <div class="meta">
+        {{vote_count}} point(s) by {{user.username}} on
+        {{created_at}}
+        |
+        <a href="/post/{{id}}">{{comments.length}} comment(s)</a>
+      </div>
+    </article>
+  </li>
+  {{/each}}
+</ol>
+```
+
+make it clearer by declaring variable name in the `{{#each}}` expression and using that name for subsequent placeholders:
+
+```
+<ol class="post-list">
+  {{#each posts as |post|}}
+  <li>
+    <article class="post">
+      <div class="title">
+        <a href="{{post.post_url}}" target="_blank">{{post.title}}</a>
+        <span>({{post.post_url}})</span>
+      </div>
+      <div class="meta">
+        {{post.vote_count}} point(s) by {{post.user.username}} on
+        {{post.created_at}}
+        |
+        <a href="/post/{{post.id}}">{{post.comments.length}} comment(s)</a>
+      </div>
+    </article>
+  </li>
+  {{/each}}
+</ol>
+```
 
 ### 14.1.7: Reflection
 
 ### 14.2.1: Introduction
 
+_BUILD A VERY SIMPLE LOGIN/SIGNUP PAGE_
+
+-   New Handlebars.js view.
+-   Fetch requests on the front end.
+-   Leverage previously-written sequelize queries.
+
 ### 14.2.2: Preview
+
+_We need to create the logic that will post to the server when a user logs in before we create that user’s session._
+
+| Step # | Task                              | Description                                                                     |
+| ------ | --------------------------------- | ------------------------------------------------------------------------------- |
+| 1      | Create a login page.              | Both login and sign-up sections will display at once.                           |
+| 2      | Add front-end logic to forms.     | We will add fetch requests to post to the server when a user logs in.           |
+| 3      | Create a session on the back end. | We will keep track of users' sessions so that we can associate them with posts. |
+| 4      | Add logic to destroy the session. | The user will also be redirected upon logout.                                   |
 
 ### 14.2.3: Create a Login Page
 
+create new feature branch
+
+#### create HTML template for login page
+
+add `/login` link to main layout
+
+-   in `views/layouts/main.handlebars`, update `<header>`:
+    ` <header> <h1> <a href="/">Just Tech News</a> </h1> <nav> <a href="/login">login</a> </nav> </header> ``` `
+    create `/views/login.handlebars` for login and signup functionality on same page
+
+```
+<form class="login-form">
+  <div>
+    <label for="email-login">email:</label>
+    <input type="text" id="email-login" />
+  </div>
+  <div>
+    <label for="password-login">password:</label>
+    <input type="password" id="password-login" />
+  </div>
+  <div>
+    <button type="submit">login</button>
+  </div>
+</form>
+```
+
+#### create route that renders the page
+
+```
+// login route, renders with hbs
+router.get("/login", (req, res) => {
+	res.render("login"); // No variables needed, no second argument
+});
+```
+
+test in browser
+
 ### 14.2.4: Add Front-End Logic to Forms
+
+front-end js will be required. By nature it's static, so serve it with Express.js
+
+create `/public/javascript/login.js`
+
+where to put script tag for this js?
+
+-   Put at bottom of `login.handblebars.`. If it's in `main.handlebars`, every page would load the script
+    -   use absolute path, not relative file path
+    -   front-end js code will **not** be sent over to client at same time as HTML content.
+    -   browser makes a new request for js file after template has rendered and sees the `<script>` element
+
+#### create a listener and function for login submission
+
+```
+function signupFormHandler(event) {
+    event.preventDefault();
+
+}
+
+document.querySelector('.signup-form')addEventListener('submit', signupFormHandler);
+```
+
+-   POST username, email and password from form to server ??? I DON'T KNOW HOW TO DO THIS
+
+-   make a `fetch()` POST request to `/api/users/` with `signupFormHandler()`
+
+update sign-up form function with conditional statement to help prevent malformed/malicious requests
+
+```
+function signupFormHandler(event) {
+  event.preventDefault();
+
+  const username = document.querySelector('#username-signup').value.trim();
+  const email = document.querySelector('#email-signup').value.trim();
+  const password = document.querySelector('#password-signup').value.trim();
+
+  if (username && email && password) {
+    fetch('/api/users', {
+      method: 'post',
+      body: JSON.stringify({
+        username,
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    }).then((response) => {console.log(response)})
+  }
+}
+```
+
+???? missing something here. Not adding users when doing the form. Subsequent requests unsuccessful.
+
+#### `async/await`
+
+-   "syntactic sugar"
+-   make Promises more readable
+
+add keyword `async` to function that wraps asynchronous code:
+
+```
+async function signupFormHandler(event) {
+```
+
+add `await` kw before the Promise:
+
+```
+async function signupFormHandler(event) {
+  event.preventDefault();
+
+  const username = document.querySelector('#username-signup').value.trim();
+  const email = document.querySelector('#email-signup').value.trim();
+  const password = document.querySelector('#password-signup').value.trim();
+
+  if (username && email && password) {
+    await fetch('/api/users', {
+      method: 'post',
+      body: JSON.stringify({
+        username,
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    }).then((response) => {console.log(response)})
+  }
+}
+```
+
+`await` allows you to remove the `then()`(s) chained on the end because promise result can be assigned to a variable (below, it's: `const response = await fetch();`)
+
+```
+async function signupFormHandler(event) {
+  event.preventDefault();
+
+  const username = document.querySelector('#username-signup').value.trim();
+  const email = document.querySelector('#email-signup').value.trim();
+  const password = document.querySelector('#password-signup').value.trim();
+
+  if (username && email && password) {
+    const response = await fetch('/api/users', {
+      method: 'post',
+      body: JSON.stringify({
+        username,
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    console.log(response);
+  }
+}
+```
+
+Now, add `.ok` property on the response object
+
+```
+async function signupFormHandler(event) {
+  event.preventDefault();
+
+  const username = document.querySelector('#username-signup').value.trim();
+  const email = document.querySelector('#email-signup').value.trim();
+  const password = document.querySelector('#password-signup').value.trim();
+
+  if (username && email && password) {
+    const response = await fetch('/api/users', {
+      method: 'post',
+      body: JSON.stringify({
+        username,
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    // check the response status
+    if (response.ok) {
+      console.log('success');
+    } else {
+      alert(response.statusText);
+    }
+  }
+}
+```
+
+#### Create login
+
+Basically repeat same steps for login
+
+```
+async function loginFormHandler(event) {
+  event.preventDefault();
+
+  const email = document.querySelector('#email-login').value.trim();
+  const password = document.querySelector('#password-login').value.trim();
+
+  if (email && password) {
+    const response = await fetch('/api/users/login', {
+      method: 'post',
+      body: JSON.stringify({
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (response.ok) {
+      document.location.replace('/');
+    } else {
+      alert(response.statusText);
+    }
+  }
+}
+
+document.querySelector('.login-form').addEventListener('submit', loginFormHandler);
+```
 
 ### 14.2.5: Create a Session on the Back End
 
@@ -2405,3 +2929,7 @@ User Stories:
 ### Module 14 Dessert Menu
 
 ## Save Point
+
+```
+
+```
