@@ -2856,7 +2856,36 @@ document.querySelector('.login-form').addEventListener('submit', loginFormHandle
 
 ### 14.2.5: Create a Session on the Back End
 
+_After user logs in, they should have access to new routes and features (leave comments)_
+**Sessions** allow Express.js server to keep track of which user is making a request and store data about them.
+
 ### 14.2.6: Add Logic to Destroy the Session
+
+_Let users logout_
+
+`user-routes.js`:
+
+```
+router.post("/logout", (req, res) => {
+	if (req.session.loggedIn) {
+		req.session.destroy(() => {
+			res.status(204).end();
+		});
+	} else {
+		res.status(404).end();
+	}
+});
+```
+
+add to `main.handlebars` to create logout button:
+- not a page, but button styling
+
+```
+ <nav>
+  <button id="logout" class="btn-no-style">logout</button>
+  <a href="/login">login</a>
+</nav>
+```
 
 ### 14.2.7: Reflection
 
