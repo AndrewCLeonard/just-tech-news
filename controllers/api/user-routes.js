@@ -1,11 +1,8 @@
-// MY FILE
 const router = require("express").Router();
-// ERROR: FORGOT `Comment` HERE
 const { User, Post, Comment, Vote } = require("../../models");
 
-// GET /api/users
+// get all users
 router.get("/", (req, res) => {
-	// Access our User model and run .findAll() method
 	User.findAll({
 		attributes: { exclude: ["password"] },
 	})
@@ -16,10 +13,8 @@ router.get("/", (req, res) => {
 		});
 });
 
-// GET individual users: /api/users/:id
 router.get("/:id", (req, res) => {
 	User.findOne({
-		// ERROR: FORGOT TO EXCLUDE PASSWORD
 		attributes: { exclude: ["password"] },
 		where: {
 			id: req.params.id,
@@ -30,7 +25,6 @@ router.get("/:id", (req, res) => {
 				attributes: ["id", "title", "post_url", "created_at"],
 			},
 			{
-				// ERROR: FORGOT THIS SECTION START
 				model: Comment,
 				attributes: ["id", "comment_text", "created_at"],
 				include: {
@@ -38,7 +32,6 @@ router.get("/:id", (req, res) => {
 					attributes: ["title"],
 				},
 			},
-			// FORGOT SECTION END
 			{
 				model: Post,
 				attributes: ["title"],
@@ -60,7 +53,9 @@ router.get("/:id", (req, res) => {
 		});
 });
 
-// POST /api/users
+// ============================================================================================
+
+// CREATE A USER, including session info
 router.post("/", (req, res) => {
 	// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 	User.create({
@@ -68,43 +63,58 @@ router.post("/", (req, res) => {
 		email: req.body.email,
 		password: req.body.password,
 	})
-		.then((dbUserData) => res.json(dbUserData))
-		.catch((err) => {
-			console.log(err);
-			res.status(500).json(err);
+		// give server access to user's `user_id`, `username` and Boolean describing whether or not logged in
+		.then((dbUserData) => {
+			req.session.save(() => {
+				req.session.user_id = dbUserData.id;
+				req.session.username = dbUserData.username;
+				req.session.loggedIn = true;
+
+				res.json(dbUserData);
+			});
 		});
 });
 
-// POST /login
+// ============================================================================================
+
+//
 router.post("/login", (req, res) => {
 	// expects {email: 'lernantino@gmail.com', password: 'password1234'}
 	User.findOne({
 		where: {
 			email: req.body.email,
 		},
-	}).then((dbUserData) => {
-		if (!dbUserData) {
-			res.status(400).json({ message: "No user with that email address!" });
-			return;
-		}
+	})
+		// give server access to user's `user_id`, `username` and Boolean describing whether or not logged in
+		.then((dbUserData) => {
+			if (!dbUserData) {
+				res.status(400).json({ message: "No user with that email address!" });
+				return;
+			}
 
-		const validPassword = dbUserData.checkPassword(req.body.password);
-		if (!validPassword) {
-			res.status(400).json({ message: "Incorrect password!" });
-			return;
-		}
+			const validPassword = dbUserData.checkPassword(req.body.password);
 
-		res.json({ user: dbUserData, message: "You are now logged in!" });
-	});
+			if (!validPassword) {
+				res.status(400).json({ message: "Incorrect password!" });
+				return;
+			}
+
+			req.session.save(() => {
+				// declare session variables
+				req.session.user.id = dbUserData.id;
+				req.session.username = dbUserData.username;
+				req.session.loggedIn = true;
+			});
+
+			res.json({ user: dbUserData, message: "You are now logged in!" });
+		});
 });
 
-// PUT /api/users/1
 router.put("/:id", (req, res) => {
 	// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 
 	// pass in req.body instead to only update what's passed through
 	User.update(req.body, {
-		// line below required for Sequelize/bcrypt
 		individualHooks: true,
 		where: {
 			id: req.params.id,
@@ -123,7 +133,6 @@ router.put("/:id", (req, res) => {
 		});
 });
 
-// DELETE /api/users/1
 router.delete("/:id", (req, res) => {
 	User.destroy({
 		where: {
