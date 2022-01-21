@@ -2859,6 +2859,12 @@ document.querySelector('.login-form').addEventListener('submit', loginFormHandle
 _After user logs in, they should have access to new routes and features (leave comments)_
 **Sessions** allow Express.js server to keep track of which user is making a request and store data about them.
 
+#### libraries to help with cookie storage
+
+```
+npm i express-session connect-session-sequelize
+```
+
 ### 14.2.6: Add Logic to Destroy the Session
 
 _Let users logout_
@@ -2916,14 +2922,43 @@ async function logout() {
 document.querySelector("#logout").addEventListener("click", logout);
 ```
 
-
 ### 14.2.7: Reflection
+
+-   Used Express.js and Sequelize to implement sessions.
+-   Managed front-end JavaScript logic in an MVC app.
 
 ## Lesson 3: Create the Single-Post View
 
+Goals:
+
+-   build a new template and route that allows users to view a posted article in detail.
+-   display any comments the blog post has received
+-   let users add new comments or upvote the post.
+
 ### 14.3.1: Introduction
 
+"Create a single post page" GitHub issue
+
+-   As a user, I can view an article's details on a separate page.
+
+-   As a logged-in user, I can add a comment to an article.
+
+-   As a logged-in user, I can upvote an article.
+
+Will be able to:
+
+-   Use session data within a template.
+-   Write conditionals to change a template's layout.
+
 ### 14.3.2: Preview
+
+| Step # | Task                                    | Description                                                                                                |
+| ------ | --------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1      | Create a single post template.          | create a new Handlebars.js template to render a single post and all of its corresponding data.             |
+| 2      | Add upvote functionality.               | connect front-end and back-end logic to create a working upvote button.                                    |
+| 3      | Add comment functionality.              | connect front-end and back-end logic to create a working comment form.                                     |
+| 4      | Conditionally render the form elements. | use Handlebars.js helpers to hide the form elements to users who aren’t logged in.                         |
+| 5      | Conditionally render the login links.   | use Handlebars.js helpers to change the navigation links that a user sees based on their logged-in status. |
 
 ### 14.3.3: Create a Single-Post Template
 
@@ -2986,7 +3021,6 @@ document.querySelector("#logout").addEventListener("click", logout);
 ### Module 14 Career Connection
 
 ### Module 14 Dessert Menu
-
 
 ```
 

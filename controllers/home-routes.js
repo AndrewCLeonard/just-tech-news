@@ -35,7 +35,12 @@ router.get("/", (req, res) => {
 
 // login route, renders with hbs
 router.get("/login", (req, res) => {
-	res.render("login"); // No variables needed, no second argument
+	if (req.session.loggedIn) {
+		res.redirect("/");
+		return;
+	}
+
+	res.render("login");
 });
 
 module.exports = router;
