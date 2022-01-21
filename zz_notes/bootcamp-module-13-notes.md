@@ -2878,7 +2878,8 @@ router.post("/logout", (req, res) => {
 ```
 
 add to `main.handlebars` to create logout button:
-- not a page, but button styling
+
+-   not a page, but button styling
 
 ```
  <nav>
@@ -2886,6 +2887,35 @@ add to `main.handlebars` to create logout button:
   <a href="/login">login</a>
 </nav>
 ```
+
+link to `public/javastript/logout.js` in `main.handlebars` (must be before closing body tag)
+
+```
+  <script src="/javascript/logout.js"></script>
+</body>
+```
+
+In `logout.js`, add click event handler that calls `/logout` route:
+
+```
+const { response } = require("express");
+
+async function logout() {
+	const response = await fetch("/api/users/logout", {
+		method: "post",
+		headhers: { "Content-Type": "application/json" },
+	});
+
+	if (response.ok) {
+		document.location.replace("/");
+	} else {
+		alert(response.statusText);
+	}
+}
+
+document.querySelector("#logout").addEventListener("click", logout);
+```
+
 
 ### 14.2.7: Reflection
 

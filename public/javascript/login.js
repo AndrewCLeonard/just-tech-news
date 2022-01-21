@@ -43,7 +43,8 @@ async function signupFormHandler(event) {
 
 		// check the response status
 		if (response.ok) {
-			console.log("success");
+			document.location.replace("/");
+			console.log("login was successful");
 		} else {
 			alert(response.statusText);
 		}
