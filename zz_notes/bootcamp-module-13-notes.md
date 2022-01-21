@@ -2962,6 +2962,10 @@ Will be able to:
 
 ### 14.3.3: Create a Single-Post Template
 
+- create a new branch `feature/single-post`
+
+#### Create new Handlebars.js template `views/single-post.handlebars`
+
 ### 14.3.4: Add Upvote Functionality
 
 ### 14.3.5: Add Comment Functionality
