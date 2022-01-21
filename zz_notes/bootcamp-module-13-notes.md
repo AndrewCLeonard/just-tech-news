@@ -2887,6 +2887,9 @@ add to `main.handlebars` to create logout button:
 </nav>
 ```
 
+
+## Save Point
+
 ### 14.2.7: Reflection
 
 ## Lesson 3: Create the Single-Post View
@@ -2957,7 +2960,6 @@ add to `main.handlebars` to create logout button:
 
 ### Module 14 Dessert Menu
 
-## Save Point
 
 ```
 
