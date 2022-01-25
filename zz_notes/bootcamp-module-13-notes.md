@@ -2172,11 +2172,20 @@ _No, setting the display of an element to inline-block gives the element the pro
 [to do] MVC intro video
 **MVC** architectural pattern that structures a codebase as three distinct sections according to software design philosophy known as **separation of concerns**
 
-| Task       | Description                                                                                                                                                       | What's Next?                                                     |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Model      | data                                                                                                                                                              | dynamically generate HTML using Handlebars.js to form View layer |
-| View       | display (HTML)                                                                                                                                                    |                                                                  |
-| Controller | Intermediary layer that connects the View and the Model: e.g. handles input from user, interacts with Model to CRUD, returns query results to user via view layer | Create Controller with Express.js                                |
+![MVC diagram](./images/MVC_diagram_1.png)
+
+Diagram of simple express server:
+![Express Server Diagram](./images/simple_express_server.png)
+
+![MVC Architecture Pattern](./images/MVC3_freecodecamp.png)
+
+In this project:
+
+| Layer          | Description                                                                                                                                                       | Tool          | Tool's Function                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ |
+| **Model**      | business objects, i.e. data                                                                                                                                       | Sequelize     | MySQL Database                                   |
+| **View**       | display (HTML), the user interface and interaction                                                                                                                | HandleBars.js | dynamically generate HTML                        |
+| **Controller** | Intermediary layer that connects the View and the Model: e.g. handles input from user, interacts with Model to CRUD, returns query results to user via view layer | Express.js    | tie it all together and handle the functionality |
 
 Additional Tasks:
 
