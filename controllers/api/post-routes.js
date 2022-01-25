@@ -1,9 +1,11 @@
 // MY FILE
 const router = require("express").Router();
 const sequelize = require("../../config/connection");
-const { Post, User, Vote, Comment } = require("../../models");
+const { Post, User, Comment, Vote } = require("../../models");
 
-// get all posts: /api/posts
+// ============================================================================================
+// get all posts, including comments: /api/posts
+// ============================================================================================
 router.get("/", (req, res) => {
 	console.log("\n \n \n \n \n \n========== INDEX.JS GET ALL POSTS ============");
 	Post.findAll({
@@ -32,8 +34,9 @@ router.get("/", (req, res) => {
 			res.status(500).json(err);
 		});
 });
-
+// ============================================================================================
 // GET a single post: api/posts/1
+// ============================================================================================
 router.get("/:id", (req, res) => {
 	Post.findOne({
 		where: {
@@ -42,7 +45,7 @@ router.get("/:id", (req, res) => {
 		attributes: ["id", "post_url", "title", "created_at", [sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"]],
 		include: [
 			{
-				// ERROR: OMMITTED THIS SECTION
+				// MY ERROR: OMMITTED THIS SECTION
 				model: Comment,
 				attributes: ["id", "comment_text", "post_id", "user_id", "created_at"],
 				include: {
@@ -51,7 +54,7 @@ router.get("/:id", (req, res) => {
 				},
 			},
 			{
-			// END OF ERROR
+				// END OF ERROR
 				model: User,
 				attributes: ["username"],
 			},
@@ -70,7 +73,9 @@ router.get("/:id", (req, res) => {
 		});
 });
 
+// ============================================================================================
 // POST a new post: /
+// ============================================================================================
 router.post("/", (req, res) => {
 	// expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com', user_id: 1}
 	Post.create({
@@ -85,20 +90,25 @@ router.post("/", (req, res) => {
 		});
 });
 
+// ============================================================================================
 // PUT upvotes: /api/posts/upvote (needs to be above `/:id` route)
+// ============================================================================================
 router.put("/upvote", (req, res) => {
-	// custom static method created in models/Post.js
-	Post.upvote(req.body, { Vote })
-	// ERROR: SHOULD BE `updatedVoteData` NOT `updatedPostData`
-		.then((updatedVoteData) => res.json(updatedVoteData))
-		.catch((err) => {
-			console.log(err);
-			// ERROR: 500 STATUS NOT 400 
-			res.status(500).json(err);
-		});
+	// make sure the session exists first
+	if (req.session) {
+		// pass session id along with all destructured properties on req.body
+		Post.upvote({ ...req.body, user_id: req.session.user_id }, { Vote, Comment, User })
+			.then((updatedVoteData) => res.json(updatedVoteData))
+			.catch((err) => {
+				console.log(err);
+				res.status(500).json(err);
+			});
+	}
 });
 
+// ============================================================================================
 // PUT update a post: /api/posts/:id
+// ============================================================================================
 router.put("/:id", (req, res) => {
 	// expects {title: 'Taskmaster goes public!', post_url: 'https://taskmaster.com', user_id: 1}
 
@@ -124,8 +134,12 @@ router.put("/:id", (req, res) => {
 			res.status(500).json(err);
 		});
 });
+
+// ============================================================================================
 // DELETE a post
+// ============================================================================================
 router.delete("/:id", (req, res) => {
+	console.log("id", req.params.id);
 	Post.destroy({
 		where: {
 			id: req.params.id,
