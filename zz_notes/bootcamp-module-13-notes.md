@@ -2966,54 +2966,266 @@ Will be able to:
 
 #### Create new Handlebars.js template `views/single-post.handlebars`
 
-add code:
-
 ```
 <article class="post">
-	<div class="title">
-		<a href="{{post.post_url}}" target="_blank">{{post.title}}</a>
-		<span>({{post.post_url}})</span>
-	</div>
-	<div class="meta">
-		{{post.vote_count}}
-		point(s) by
-		{{post.user.username}}
-		on
-		{{post.created_at}}
-		|
-		<a href="/post/{{post.id}}">{{post.comments.length}} comment(s)</a>
-	</div>
+  <div class="title">
+    <a href="{{post.post_url}}" target="_blank">{{post.title}}</a>
+    <span>({{post.post_url}})</span>
+  </div>
+  <div class="meta">
+    {{post.vote_count}} point(s) by {{post.user.username}} on
+    {{post.created_at}}
+    |
+    <a href="/post/{{post.id}}">{{post.comments.length}} comment(s)</a>
+  </div>
 </article>
 ```
 
-create route in `controllers/home-routes.js` to make sure it renders:
+add route to `controllers/home-routes.js`:
 
--   start with hardcoded data to ensure it works
-- going straight to Sequelize would complicate debugging
+-   data hardcoded for testing purposes
 
 ```
 router.get('/post/:id', (req, res) => {
-	const post = {
-		id: 1,
-		post_url: 'https://handlebarsjs.com/guide',
-		title: 'Handlebars Docs',
-		create_at: new Date(),
-		vote_count: 10,
-		comments: [{}, {}],
-		user: {
-			username: 'test_user'
-		}
-	};
+  const post = {
+    id: 1,
+    post_url: 'https://handlebarsjs.com/guide/',
+    title: 'Handlebars Docs',
+    created_at: new Date(),
+    vote_count: 10,
+    comments: [{}, {}],
+    user: {
+      username: 'test_user'
+    }
+  };
 
-	res.render('single-post', { post });
-})
+  res.render('single-post', { post });
+});
+```
+
+check `http://localhost:3001/post/1` to make sure it worked.
+
+Change it to:
+
+```
+router.get('/post/:id', (req, res) => {
+  Post.findOne({
+    where: {
+      id: req.params.id
+    },
+    attributes: [
+      'id',
+      'post_url',
+      'title',
+      'created_at',
+      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+    ],
+    include: [
+      {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
+      {
+        model: User,
+        attributes: ['username']
+      }
+    ]
+  })
+    .then(dbPostData => {
+      if (!dbPostData) {
+        res.status(404).json({ message: 'No post found with this id' });
+        return;
+      }
+
+      // serialize the data
+      const post = dbPostData.get({ plain: true });
+
+      // pass data to template
+      res.render('single-post', { post });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+});
+```
+
+clicking on comment-count links on homepage should route you to single-post page now.
+
+add comment form below `</article>` tag in `single-post.handlebars`:
+
+-   uses `{{#each}}` helper to iterate over the `comments` array
+-   didn't declare variable name for iterated objects, could have used `{{#each post.comments as |comment|}}`
+-   create test comments in db before anything wil ldisplay.
+
+```
+<form class="comment-form">
+	<div>
+		<textarea name="comment-body"></textarea>
+	</div>
+
+	<div>
+		<button type="submit">add comment</button>
+		<button type="button" class="upvote-btn">upvote</button>
+	</div>
+</form>
+
+<div class="comments">
+	{{#each post.comments}}
+		<section class="comment">
+			<div class="meta">
+				{{user.username}}
+				on
+				{{created_at}}
+			</div>
+			<div class="text">
+				{{comment_text}}
+			</div>
+		</section>
+	{{/each}}
+</div>
 ```
 
 ### 14.3.4: Add Upvote Functionality
 
+_Call API routes from front end._ API routes for creating new comments and upvoting are already working (`/api/comments` and `/api/posts/upvote`)
+
+#### File Setup
+
+Create new files in `public/javascript` directory:
+
+-   `comment.js`
+-   `upvote.js`
+
+link these files in `single-post.handlebars`
+
+```
+<script src="/javascript/comment.js"></script>
+<script src="/javascript/upvote.js"></script>
+```
+
+#### Upvote Functionality
+
+in `public/javascript/upvote.js`:
+
+-   `async` function because it will be making an asynchronous PUT request with `fetch()`.
+-   need `post_id` and `user_id`
+    -   `user_id` available on the session on back end
+    -   get `post_id` from the URL
+
+```
+async function upvoteClickHandler(event) {
+  event.preventDefault();
+
+  console.log('button clicked');
+}
+
+document.querySelector('.upvote-btn').addEventListener('click', upvoteClickHandler);
+```
+
 ### 14.3.5: Add Comment Functionality
 
+process for adding comments will be similar to upvotes.
+
+add code to `public/javascript/comment.js`:
+
+-   console logging to make sure it's the right element
+    -   post id from URL
+    -   value of the `<textarea>` element
+
+```
+async function commentFormHandler(event) {
+  event.preventDefault();
+
+  const comment_text = document.querySelector('textarea[name="comment-body"]').value.trim();
+
+  const post_id = window.location.toString().split('/')[
+    window.location.toString().split('/').length - 1
+  ];
+
+  console.log(comment_text, post_id);
+}
+
+document.querySelector('.comment-form').addEventListener('submit', commentFormHandler);
+```
+
+It worked, so replace `console.log()` with:
+
+```
+if (comment_text) {
+  const response = await fetch('/api/comments', {
+    method: 'POST',
+    body: JSON.stringify({
+      post_id,
+      comment_text
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (response.ok) {
+    document.location.reload();
+  } else {
+    alert(response.statusText);
+  }
+}
+```
+
+add update to `.post('/')` route in `controllers/api/comment-routes.js`:
+
+```
+router.post('/', (req, res) => {
+  // check the session
+  if (req.session) {
+    Comment.create({
+      comment_text: req.body.comment_text,
+      post_id: req.body.post_id,
+      // use the id from the session
+      user_id: req.session.user_id
+    })
+      .then(dbCommentData => res.json(dbCommentData))
+      .catch(err => {
+        console.log(err);
+        res.status(400).json(err);
+      });
+  }
+});
+```
+
 ### 14.3.6: Conditionally Render the Form Elements
+
+If a user hasn't logged in, we don't want them to see comment form or upvote button.
+
+Instead of creating a "not-logged-in" template, use a Handlebars.js helper `{{#if}}` statement:
+
+```
+{{#if loggedIn}}
+<form class="comment-form">
+  <div>
+    <textarea name="comment-body"></textarea>
+  </div>
+
+  <div>
+    <button type="submit">add comment</button>
+    <button type="button" class="upvote-btn">upvote</button>
+  </div>
+</form>
+{{/if}}
+```
+
+Conditionally render the `<script>` elements so users who aren't logged in don't get Uncaught TypeError messages in console because fronwt end won't receive `<form class="comment-form">` or `<button class ="upvote-btn">` elements.
+
+```
+{{#if loggedIn}}
+<script src="/javascript/comment.js"></script>
+<script src="/javascript/upvote.js"></script>
+{{/if}}
+```
 
 ### 14.3.7: Conditionally Render the Login Links
 
@@ -3072,3 +3284,15 @@ router.get('/post/:id', (req, res) => {
 ```
 
 ```
+
+## Class Notes
+
+### 01-20-2022
+
+### Handlebars Setup
+
+-   install handlebars
+-   use as view engine
+-   set public directory to be available via the web
+
+#### Handlebars Partials

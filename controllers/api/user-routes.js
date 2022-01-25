@@ -1,7 +1,9 @@
 const router = require("express").Router();
 const { User, Post, Comment, Vote } = require("../../models");
 
+// ============================================================================================
 // get all users
+// ============================================================================================
 router.get("/", (req, res) => {
 	User.findAll({
 		attributes: { exclude: ["password"] },
@@ -13,6 +15,9 @@ router.get("/", (req, res) => {
 		});
 });
 
+// ============================================================================================
+// get a single user
+// ============================================================================================
 router.get("/:id", (req, res) => {
 	User.findOne({
 		attributes: { exclude: ["password"] },
@@ -54,8 +59,8 @@ router.get("/:id", (req, res) => {
 });
 
 // ============================================================================================
-
 // CREATE A USER, including session info
+// ============================================================================================
 router.post("/", (req, res) => {
 	// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 	User.create({
@@ -72,9 +77,49 @@ router.post("/", (req, res) => {
 
 				res.json(dbUserData);
 			});
+		})
+		.catch((err) => {
+			console.log(err);
+			res.status(500).json(err);
 		});
 });
 
+// ============================================================================================
+// login route
+// ============================================================================================
+router.post("/login", (req, res) => {
+	// expects {email: 'lernantino@gmail.com', password: 'password1234'}
+	User.findOne({
+		where: {
+			email: req.body.email,
+		},
+		// give server access to user's `user_id`, `username` and Boolean describing whether or not logged in
+	}).then((dbUserData) => {
+		if (!dbUserData) {
+			res.status(400).json({ message: "No user with that email address!" });
+			return;
+		}
+
+		const validPassword = dbUserData.checkPassword(req.body.password);
+
+		if (!validPassword) {
+			res.status(400).json({ message: "Incorrect password!" });
+			return;
+		}
+
+		req.session.save(() => {
+			// declare session variables
+			req.session.user_id = dbUserData.id;
+			req.session.username = dbUserData.username;
+			req.session.loggedIn = true;
+
+			res.json({ user: dbUserData, message: "You are now logged in!" });
+		});
+	});
+});
+
+// ============================================================================================
+// logout route
 // ============================================================================================
 router.post("/logout", (req, res) => {
 	if (req.session.loggedIn) {
@@ -86,40 +131,8 @@ router.post("/logout", (req, res) => {
 	}
 });
 // ============================================================================================
-
-//
-router.post("/login", (req, res) => {
-	// expects {email: 'lernantino@gmail.com', password: 'password1234'}
-	User.findOne({
-		where: {
-			email: req.body.email,
-		},
-	})
-		// give server access to user's `user_id`, `username` and Boolean describing whether or not logged in
-		.then((dbUserData) => {
-			if (!dbUserData) {
-				res.status(400).json({ message: "No user with that email address!" });
-				return;
-			}
-
-			const validPassword = dbUserData.checkPassword(req.body.password);
-
-			if (!validPassword) {
-				res.status(400).json({ message: "Incorrect password!" });
-				return;
-			}
-
-			req.session.save(() => {
-				// declare session variables
-				req.session.user.id = dbUserData.id;
-				req.session.username = dbUserData.username;
-				req.session.loggedIn = true;
-			});
-
-			res.json({ user: dbUserData, message: "You are now logged in!" });
-		});
-});
-
+// Update a user???
+// ============================================================================================
 router.put("/:id", (req, res) => {
 	// expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 
@@ -131,7 +144,7 @@ router.put("/:id", (req, res) => {
 		},
 	})
 		.then((dbUserData) => {
-			if (!dbUserData[0]) {
+			if (!dbUserData) {
 				res.status(404).json({ message: "No user found with this id" });
 				return;
 			}
@@ -142,6 +155,9 @@ router.put("/:id", (req, res) => {
 			res.status(500).json(err);
 		});
 });
+// ============================================================================================
+// Delete a User
+// ============================================================================================
 
 router.delete("/:id", (req, res) => {
 	User.destroy({
