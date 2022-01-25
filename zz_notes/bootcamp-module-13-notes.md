@@ -2992,3 +2992,15 @@ document.querySelector("#logout").addEventListener("click", logout);
 ```
 
 ```
+
+## Class Notes
+
+### 01-20-2022
+
+### Handlebars Setup
+- install handlebars
+- use as view engine
+- set public directory to be available via the web
+
+#### Handlebars Partials
+

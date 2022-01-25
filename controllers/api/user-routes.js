@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const { User, Post, Comment, Vote } = require("../../models");
 
+// ============================================================================================
+
 // get all users
 router.get("/", (req, res) => {
 	User.findAll({
@@ -13,6 +15,9 @@ router.get("/", (req, res) => {
 		});
 });
 
+// ============================================================================================
+
+// get a single user
 router.get("/:id", (req, res) => {
 	User.findOne({
 		attributes: { exclude: ["password"] },
@@ -76,6 +81,7 @@ router.post("/", (req, res) => {
 });
 
 // ============================================================================================
+// logout 
 router.post("/logout", (req, res) => {
 	if (req.session.loggedIn) {
 		req.session.destroy(() => {
