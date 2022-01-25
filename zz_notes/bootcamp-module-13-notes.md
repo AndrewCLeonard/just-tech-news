@@ -2962,9 +2962,52 @@ Will be able to:
 
 ### 14.3.3: Create a Single-Post Template
 
-- create a new branch `feature/single-post`
+-   create a new branch `feature/single-post`
 
 #### Create new Handlebars.js template `views/single-post.handlebars`
+
+add code:
+
+```
+<article class="post">
+	<div class="title">
+		<a href="{{post.post_url}}" target="_blank">{{post.title}}</a>
+		<span>({{post.post_url}})</span>
+	</div>
+	<div class="meta">
+		{{post.vote_count}}
+		point(s) by
+		{{post.user.username}}
+		on
+		{{post.created_at}}
+		|
+		<a href="/post/{{post.id}}">{{post.comments.length}} comment(s)</a>
+	</div>
+</article>
+```
+
+create route in `controllers/home-routes.js` to make sure it renders:
+
+-   start with hardcoded data to ensure it works
+- going straight to Sequelize would complicate debugging
+
+```
+router.get('/post/:id', (req, res) => {
+	const post = {
+		id: 1,
+		post_url: 'https://handlebarsjs.com/guide',
+		title: 'Handlebars Docs',
+		create_at: new Date(),
+		vote_count: 10,
+		comments: [{}, {}],
+		user: {
+			username: 'test_user'
+		}
+	};
+
+	res.render('single-post', { post });
+})
+```
 
 ### 14.3.4: Add Upvote Functionality
 
