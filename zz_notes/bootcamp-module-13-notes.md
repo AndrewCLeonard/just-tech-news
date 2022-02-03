@@ -2177,20 +2177,29 @@ _No, setting the display of an element to inline-block gives the element the pro
 Diagram of simple express server:
 ![Express Server Diagram](./images/simple_express_server.png)
 
+FreeCodeCamp.org MVC architecture pattern diagram:
 ![MVC Architecture Pattern](./images/MVC3_freecodecamp.png)
 
 In this project:
 
-| Layer          | Description                                                                                                                                                       | Tool          | Tool's Function                                  |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ |
-| **Model**      | business objects, i.e. data                                                                                                                                       | Sequelize     | MySQL Database                                   |
-| **View**       | display (HTML), the user interface and interaction                                                                                                                | HandleBars.js | dynamically generate HTML                        |
-| **Controller** | Intermediary layer that connects the View and the Model: e.g. handles input from user, interacts with Model to CRUD, returns query results to user via view layer | Express.js    | tie it all together and handle the functionality |
+| Layer          | Description                                                                                                                                                                                           | Tool          | Tool's Function                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ |
+| **Model**      | business objects, i.e. data                                                                                                                                                                           | Sequelize     | MySQL Database                                   |
+| **View**       | display (HTML), the user interface and interaction                                                                                                                                                    | HandleBars.js | dynamically generate HTML                        |
+| **Controller** | Intermediary layer that connects the View and the Model: <br/> <ul><li>handles input from user,</li><li>interacts with Model to CRUD,</li> <li>returns query results to user via view layer</li></ul> | Express.js    | tie it all together and handle the functionality |
 
 Additional Tasks:
 
 -   authenticate users by verifying their credentials
 -   deploy full-stack app to Heroku
+
+### MVC Structure Outline
+
+| Layer      | Folder Level 1 | Folder Level 2 | File Name      | Description                                                                                                                                                                              |
+| ---------- | -------------- | -------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| n/a        | config         |                | connection.js  | <ul><li>imports Sequelize constructor</li><li>imports dotenv config file</li><li>creates connection to db</li><li>connects to Jaws DB for use with Heroku, or use with local server</li> |
+| controller | controllers    | n/a            | index.js       |
+| controller | controllers    | n/a            | home-routes.js |
 
 ### 14.0.2 Roadmap
 
