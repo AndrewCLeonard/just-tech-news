@@ -1,5 +1,12 @@
 # Module 13: Object Relational Mapping (ORM)
 
+-   Render dynamic HTML using the Handlebars.js template engine.
+-   Explain and implement MVC modularization in a full-stack web application.
+-   Configure Heroku for deployment of an application using MySQL.
+-   Explain the interaction between the Model, View, and Controller.
+-   Explain separation of concerns and its benefits.
+-   Implement user authentication.
+
 ## 13.1 Intro: Run Web Server with Sequelize to Create Database Tables
 
 -   Set up the application to use Sequelize to manage SQL data.
@@ -2311,8 +2318,6 @@ User Stories:
 -   in `server.js`, add
     -   `const path = require('path');` to make it available to the client
     -   near other `app.use()` statements, add `app.use(express.static(path.join(__dirname, 'public')));`
-
-    
 
 ### 14.1.4: Set Up the Template Engine
 
