@@ -6,21 +6,21 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const session = require('express-session');
+const session = require("express-session");
 
 // requiring npm module connect session sequelize and passing the session.Store property
-const SequelizeStore = require('connect-session-sequelize'(session.Store);
+const SequelizeStore = require("connect-session-sequelize"(session.Store));
 
 // hash-based message authentication code
 
 const sess = {
-	secret: 'Super secret secret', // secret property used to sign session cookie
+	secret: "Super secret secret", // secret property used to sign session cookie
 	cookie: {},
 	resave: false, // forces session to be saved back to session store. Recommended setting is false
 	saveUninitialized: true, // session saved as part of the store
-	store: new SequelizeStore({ 
-		db: sequelize // creates connection with database, set up session table, allow sequelize to save the session into the database
-	})
+	store: new SequelizeStore({
+		db: sequelize, // creates connection with database, set up session table, allow sequelize to save the session into the database
+	}),
 };
 
 // call session middleware
