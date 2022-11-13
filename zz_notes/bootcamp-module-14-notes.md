@@ -65,7 +65,15 @@ User Stories:
     - use `path` in `server.js` to make stylesheet available to client. `express.static()` method = Express.js middleware that takes contents of a folder and serves them as static assets.
 
 ## 14.1.4 Set up the Template Engine
-- using Fetch API to load front-end code
-    - bad for SEO
-    - causes extra network requests on servers
 
+-   using Fetch API to load front-end code
+    -   bad for SEO
+    -   causes extra network requests on servers
+
+### MVC Paradigm
+
+-   Models: the core data of your app1
+-   Views: the UI components, such as your HTML layouts
+-   Controllers: the link between your models and views
+
+<strong>TO DO: review how all the files connect with each other.</strong>
