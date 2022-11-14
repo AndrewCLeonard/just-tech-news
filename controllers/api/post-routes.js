@@ -5,7 +5,7 @@ const { Post, User, Vote, Comment } = require("../../models");
 
 // get all posts: /api/posts
 router.get("/", (req, res) => {
-	console.log("\n \n \n \n \n \n========== INDEX.JS GET ALL POSTS ============");
+	console.log("\n \n \n \n \n \n============= controllers/api/post-routes.js GET ALL POSTS =============\n");
 	Post.findAll({
 		// Query configuration
 		attributes: ["id", "post_url", "title", "created_at", [sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"]],
@@ -51,7 +51,7 @@ router.get("/:id", (req, res) => {
 				},
 			},
 			{
-			// END OF ERROR
+				// END OF ERROR
 				model: User,
 				attributes: ["username"],
 			},
@@ -89,11 +89,11 @@ router.post("/", (req, res) => {
 router.put("/upvote", (req, res) => {
 	// custom static method created in models/Post.js
 	Post.upvote(req.body, { Vote })
-	// ERROR: SHOULD BE `updatedVoteData` NOT `updatedPostData`
+		// ERROR: SHOULD BE `updatedVoteData` NOT `updatedPostData`
 		.then((updatedVoteData) => res.json(updatedVoteData))
 		.catch((err) => {
 			console.log(err);
-			// ERROR: 500 STATUS NOT 400 
+			// ERROR: 500 STATUS NOT 400
 			res.status(500).json(err);
 		});
 });
