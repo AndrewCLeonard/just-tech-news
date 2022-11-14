@@ -1,3 +1,5 @@
+// in study hall repo, refer to Notes.md > My JS Notes > ## Object-Oriented Programming > ### for...each for notes on this
+
 const { Vote } = require("../models");
 
 const voteData = [

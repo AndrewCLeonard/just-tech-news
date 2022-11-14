@@ -1,8 +1,8 @@
 const { seedVotes } = require("./vote-seeds");
 
-function toFindDuplicates(seedVotes) {
-	const uniqueElements = new Set(seedVotes);
-	const filteredElements = seedVotes.filter((item) => {
+function toFindDuplicates(array) {
+	const uniqueElements = new Set(array);
+	const filteredElements = array.filter((item) => {
 		if (uniqueElements.has(item)) {
 			uniqueElements.delete(item);
 		} else {
