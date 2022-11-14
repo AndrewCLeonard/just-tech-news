@@ -8,6 +8,8 @@ const PORT = process.env.PORT || 3001;
 
 const session = require("express-session");
 
+const crap = require("./seeds/index.js")
+
 // requiring npm module connect session sequelize and passing the session.Store property
 // const SequelizeStore = require("connect-session-sequelize"(session.Store));
 

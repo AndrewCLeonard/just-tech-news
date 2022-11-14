@@ -9,21 +9,22 @@ User.hasMany(Post, {
 });
 
 Post.belongsTo(User, {
-	foreignKey: "user_id",
+	// this line not necessary judging from sequelize documentation: https://sequelize.org/docs/v6/core-concepts/assocs/#one-to-many-relationships
+	// foreignKey: "user_id",
 });
 
 User.belongsToMany(Post, {
 	through: Vote,
 	as: "voted_posts",
 	foreignKey: "user_id",
-	onDelete: "SET NULL",
+	// onDelete: "SET NULL",
 });
 
 Post.belongsToMany(User, {
 	through: Vote,
 	as: "voted_posts",
 	foreignKey: "post_id",
-	onDelete: "SET NULL",
+	// onDelete: "SET NULL",
 });
 
 Vote.belongsTo(User, {
