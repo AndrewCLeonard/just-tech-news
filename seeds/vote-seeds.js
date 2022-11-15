@@ -2007,4 +2007,4 @@ const voteData = [
 
 const seedVotes = () => Vote.bulkCreate(voteData);
 
-module.exports = seedPosts;
+module.exports = seedVotes;
