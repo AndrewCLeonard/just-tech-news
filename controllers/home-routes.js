@@ -25,7 +25,7 @@ router.get("/", (req, res) => {
 	})
 		.then((dbPostData) => {
 			// pass a single post object into the homepage template
-			console.log(dbPostData);
+			// console.log(dbPostData);
 
 			const posts = dbPostData.map((post) => post.get({ plain: true }));
 			res.render("homepage", {
@@ -38,9 +38,9 @@ router.get("/", (req, res) => {
 		});
 });
 
-// ============================================================================================
-// get a single post route, renders with handlebars
-// ============================================================================================
+/**
+ * get a single post route, renders with handlebars
+ */
 router.get("/post/:id", (req, res) => {
 	Post.findOne({
 		where: {
@@ -97,9 +97,9 @@ router.get("/login", (req, res) => {
 	res.render("login");
 });
 
-// ============================================================================================
-// login route, renders with handlebars
-// ============================================================================================
+/**
+ * find one post
+ */
 router.get("/post/:id", (req, res) => {
 	Post.findOne({
 		where: {
