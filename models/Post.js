@@ -49,7 +49,7 @@ Post.init(
 			allowNull: false,
 		},
 		post_url: {
-			type: DataTypes.STRING,
+			type: DataTypes.TEXT,
 			allowNull: false,
 			validate: {
 				isURL: true,
@@ -59,7 +59,7 @@ Post.init(
 			type: DataTypes.INTEGER,
 			references: {
 				model: "user",
-				key: "id",
+				key: "id", 	
 			},
 		},
 	},

@@ -5,7 +5,7 @@ const { Post, User, Vote, Comment } = require("../../models");
 
 // get all posts: /api/posts
 router.get("/", (req, res) => {
-	console.log("\n \n \n \n \n \n========== INDEX.JS GET ALL POSTS ============");
+	console.log("\n \n \n \n \n \n============= controllers/api/post-routes.js GET ALL POSTS =============\n");
 	Post.findAll({
 		// Query configuration
 		attributes: ["id", "post_url", "title", "created_at", [sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"]],
@@ -51,6 +51,7 @@ router.get("/:id", (req, res) => {
 				},
 			},
 			{
+				// END OF ERROR
 				// END OF ERROR
 				model: User,
 				attributes: ["username"],
