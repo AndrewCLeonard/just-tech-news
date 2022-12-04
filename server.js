@@ -14,7 +14,7 @@ const SequelizeStore = require("connect-session-sequelize")(session.Store);
 // hash-based message authentication code
 
 const sess = {
-	secret: "Super secret secret", // secret property used to sign session cookie
+	secret: "autographedCook1ES#*@!?", // secret property used to sign session cookie
 	cookie: {},
 	resave: false, // forces session to be saved back to session store. Recommended setting is false
 	saveUninitialized: true, // session saved as part of the store
@@ -52,5 +52,5 @@ ReferenceError: routes is not defined
 
 // turn on connection to db and server
 sequelize.sync({ force: false }).then(() => {
-	app.listen(PORT, () => console.log(`Now listening on ${PORT}`));
+	app.listen(PORT, () => console.log(`\nNow listening on ${PORT}`));
 });

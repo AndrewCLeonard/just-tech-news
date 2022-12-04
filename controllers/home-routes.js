@@ -1,8 +1,13 @@
 const router = require("express").Router();
 const sequelize = require("../config/connection");
-const { Post, User, Comment } = require("../models");
+const { Post, User, Comment, Vote } = require("../models");
 
+// get all posts for homepage
 router.get("/", (req, res) => {
+	console.log("======================");
+	console.log(`\nreq.session\n`);
+	console.log(req.session);
+	console.log(`\n\n`);
 	Post.findAll({
 		attributes: ["id", "post_url", "title", "created_at", [sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"]],
 		include: [
@@ -25,6 +30,7 @@ router.get("/", (req, res) => {
 			console.log(dbPostData[0]);
 
 			const posts = dbPostData.map((post) => post.get({ plain: true }));
+
 			res.render("homepage", { posts });
 		})
 		.catch((err) => {
@@ -35,7 +41,7 @@ router.get("/", (req, res) => {
 
 // login route, renders with hbs
 router.get("/login", (req, res) => {
-	res.render("login"); // No variables needed, no second argument
+	// res.render("login"); // No variables needed, no second argument
 	if (req.session.loggedIn) {
 		res.redirect("/");
 		return;
