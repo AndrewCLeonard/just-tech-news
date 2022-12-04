@@ -9,7 +9,13 @@ router.get("/", (req, res) => {
 	console.log(req.session);
 	console.log(`\n\n`);
 	Post.findAll({
-		attributes: ["id", "post_url", "title", "created_at", [sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"]],
+		attributes: [
+			"id", //
+			"post_url",
+			"title",
+			"created_at",
+			[sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"],
+		],
 		include: [
 			{
 				model: Comment,
@@ -26,8 +32,8 @@ router.get("/", (req, res) => {
 		],
 	})
 		.then((dbPostData) => {
+			// loop over & map each Sequelize object into a serialized version
 			const posts = dbPostData.map((post) => post.get({ plain: true }));
-
 			res.render("homepage", { posts });
 		})
 		.catch((err) => {
