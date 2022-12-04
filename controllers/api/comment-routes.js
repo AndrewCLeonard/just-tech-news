@@ -1,17 +1,12 @@
-// MY FILE
 const router = require("express").Router();
 const { Comment } = require("../../models");
 
-// ============================================================================================
-// GET all comments: /api/comments
-// ============================================================================================
+/**
+ * GET all comments: /api/comments
+ */
 router.get("/", (req, res) => {
 	console.log("============ GET ALL COMMENTS ============");
-	// ERROR: Comment.findAll({
 	Comment.findAll()
-		// ERROR: NOT REQUIRED
-		// attributes: ["id", "post_id", "comment_text", "user_id"],
-		// order: [["created_at", "DESC"]],
 		.then((dbCommentData) => res.json(dbCommentData))
 		.catch((err) => {
 			console.log(err);
@@ -19,17 +14,19 @@ router.get("/", (req, res) => {
 		});
 });
 
-// ============================================================================================
-// POST new comment: /api/comments
-// ============================================================================================
+/**
+ * POST new comment: /api/comments
+ */
 router.post("/", (req, res) => {
+	// expects => {comment_text: "This is the comment", user_id: 1, post_id: 2}
 	// check the session
 	if (req.session) {
 		Comment.create({
 			comment_text: req.body.comment_text,
-			post_id: req.body.post_id,
-			// use the id from the session
 			user_id: req.session.user_id,
+			// use the id from the session
+			post_id: req.body.post_id,
+			// post_id: <req className='body post'></req>,
 		})
 			.then((dbCommentData) => res.json(dbCommentData))
 			.catch((err) => {
@@ -39,27 +36,28 @@ router.post("/", (req, res) => {
 	}
 });
 
-// ============================================================================================
-// DELETE a comment: /api/comments/:id
-// ============================================================================================
+/**
+ * DELET a comment: /:id
+ */
 router.delete("/:id", (req, res) => {
-	Comment.destroy({
-		where: {
-			id: req.params.id,
-		},
-	})
-		.then((dbCommentData) => {
-			if (!dbCommentData) {
-				res.status(404).json({ message: "No comment found with this id!" });
-				return;
-			}
-			res.json(dbCommentData);
+	if (req.session) {
+		Comment.destroy({
+			where: {
+				id: req.params.id,
+			},
 		})
-		.catch((err) => {
-			console.log(err);
-			res.status(500).json(err);
-		});
+			.then((dbCommentData) => {
+				if (!dbCommentData) {
+					res.status(404).json({ message: "No comment found with this id!" });
+					return;
+				}
+				res.json(dbCommentData);
+			})
+			.catch((err) => {
+				console.log(err);
+				res.status(500).json(err);
+			});
+	}
 });
 
-// Export stays at end of file
 module.exports = router;

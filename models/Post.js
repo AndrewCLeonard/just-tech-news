@@ -1,4 +1,3 @@
-// MY FILE
 const { Model, DataTypes } = require("sequelize");
 const sequelize = require("../config/connection");
 // create our Post model
@@ -19,7 +18,6 @@ class Post extends Model {
 					"created_at",
 					[sequelize.literal("(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)"), "vote_count"],
 				],
-				// I FORGOT THIS INCLUDE STATEMENT:
 				include: [
 					{
 						model: models.Comment,

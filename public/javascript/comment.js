@@ -1,3 +1,5 @@
+// const { post } = require("../../controllers/home-routes");
+
 async function commentFormHandler(event) {
 	event.preventDefault();
 
@@ -6,6 +8,9 @@ async function commentFormHandler(event) {
 
 	// extracts `post_id` from the URL
 	const post_id = window.location.toString().split("/")[window.location.toString().split("/").length - 1];
+
+	console.log(`\ncomment_text, post_id\n`);
+	console.log(comment_text, post_id);
 
 	// `if` statement prevents empty strings
 	// POST method

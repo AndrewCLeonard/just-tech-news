@@ -9,7 +9,8 @@ Comment.init(
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			primaryKey: true,
-			// references: {  BROKE IT????
+			autoIncrement: true,
+			// references: {
 			// 	model: "vote",
 			// 	key: "id",
 			// },

@@ -1,4 +1,3 @@
-// MY CODE
 async function upvoteClickHandler(event) {
 	event.preventDefault();
 

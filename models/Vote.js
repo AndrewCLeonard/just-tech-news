@@ -14,7 +14,7 @@ Vote.init(
 		// inclued user_id and post_id to track ownership of posts
 		user_id: {
 			type: DataTypes.INTEGER,
-			allowNull: false,
+			// allowNull: false,
 			references: {
 				model: "user",
 				key: "id",
@@ -22,7 +22,7 @@ Vote.init(
 		},
 		post_id: {
 			type: DataTypes.INTEGER,
-			allowNull: false,
+			// allowNull: false,
 			references: {
 				model: "post",
 				key: "id",

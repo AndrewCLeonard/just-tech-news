@@ -1,7 +1,4 @@
-// MY FILE
-
 const { Model, DataTypes } = require("sequelize");
-// I FORGOT TO INCLUDE BCRYPT
 const bcrypt = require("bcrypt");
 const sequelize = require("../config/connection");
 
@@ -12,6 +9,7 @@ class User extends Model {
 		return bcrypt.compareSync(loginPw, this.password);
 	}
 }
+
 // define table columns and configuration
 User.init(
 	{
@@ -63,6 +61,7 @@ User.init(
 				return newUserData;
 			},
 			// set up beforeUpdate lifecycle "hook" functionality
+
 			async beforeUpdate(updatedUserData) {
 				updatedUserData.password = await bcrypt.hash(updatedUserData.password, 10);
 				return updatedUserData;
