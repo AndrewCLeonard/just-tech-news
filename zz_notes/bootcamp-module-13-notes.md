@@ -1,5 +1,7 @@
 # Module 13: Object Relational Mapping (ORM)
 
+
+
 ## 13.1 Intro: Run Web Server with Sequelize to Create Database Tables
 
 -   Set up the application to use Sequelize to manage SQL data.
@@ -2312,8 +2314,6 @@ User Stories:
     -   `const path = require('path');` to make it available to the client
     -   near other `app.use()` statements, add `app.use(express.static(path.join(__dirname, 'public')));`
 
-    
-
 ### 14.1.4: Set Up the Template Engine
 
 ### 14.1.5: Create the Homepage Template
@@ -2331,6 +2331,44 @@ User Stories:
 ### 14.2.4: Add Front-End Logic to Forms
 
 ### 14.2.5: Create a Session on the Back End
+
+**Sessions** allow Express.js serever to keep track of which user is making a request and store useful data about them in memory.
+**Cookies** store info about the session on the user's client
+
+-   we'll store the user's cookies in the database so we can easily re-create the user's session
+
+`npm i express-session connect-session-sequelize`
+
+-   `express-session` library allows us to connect ot the back end
+-   `connect-session-sequelize` library automatically stores the sessions created by `express-session` into our database
+
+#### Express-Session Explanation Video
+
+```
+const session = require('express-session');
+
+// requiring npm module connect session sequelize and passing the session.Store property
+const SequelizeStore = require('connect-session-sequelize'(session.Store);
+
+// hash-based message authentication code
+
+const sess = {
+	secret: 'Super secret secret', // secret property used to sign session cookie
+	cookie: {},
+	resave: false, // forces session to be saved back to session store. Recommended setting is false
+	saveUninitialized: true, // session saved as part of the store
+	store: new SequelizeStore({
+		db: sequelize // creates connection with database, set up session table, allow sequelize to save the session into the database
+	})
+};
+
+// call session middleware
+app.use(session(sess));
+```
+- By running `localhost:3000/api/users`, that will generate a session token. 
+- Go back to terminal to see session generated. 
+- in MySQL, retrieve data, and the token should appear in the database. 
+- 
 
 ### 14.2.6: Add Logic to Destroy the Session
 

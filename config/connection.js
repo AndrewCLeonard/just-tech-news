@@ -1,5 +1,6 @@
-// import the Sequelize constructor from the library
-const Sequelize = require("sequelize");
+// import the Sequelize constructor from the library https://sequelize.org/docs/v6/getting-started/#connecting-to-a-database
+// const Sequelize = require("sequelize");
+const { Sequelize } = require("sequelize");
 
 require("dotenv").config();
 
@@ -15,5 +16,12 @@ if (process.env.JAWSDB_URL) {
 		port: 3306,
 	});
 }
+// ?? test the connection https://sequelize.org/docs/v6/getting-started/#testing-the-connection
+// 	try {
+// 		await sequelize.authenticate();
+// 		console.log("Connection has been established successfully.");
+// 	} catch (error) {
+// 		console.error("Unable to connect to the database:", error);
+// 	}
 
 module.exports = sequelize;
